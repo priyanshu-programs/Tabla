@@ -5,6 +5,19 @@ export const CONTEXT = {
 
 	cost: {
 		brand: 1,
+		site: 1,
+	},
+
+	brief: {
+		positioningMinLength: 40,
+		positioningMaxLength: 600,
+		lineMaxLength: 300,
+		customerMaxLength: 80,
+		maxCustomers: 12,
+		newsMaxLength: 200,
+		maxNews: 6,
+		industryMaxLength: 60,
+		maxSources: 8,
 	},
 
 	people: {

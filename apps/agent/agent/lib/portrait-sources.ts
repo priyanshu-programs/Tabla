@@ -1,6 +1,5 @@
-import { z } from "zod";
+import { teamPortraits } from "@crm/context/team";
 import { CONTEXT } from "./context-config";
-import { extract, type JsonSchema } from "./context-dev";
 import { namesMatch } from "./names";
 import { personByProfileUrl, slugFromProfileUrl } from "./people";
 
@@ -68,17 +67,14 @@ export async function findPortrait(
 		};
 	}
 
-	if (subject.companyDomain && subject.name && !contextReady) {
-		tried.push(
-			"Context.dev is not connected, so the company site was not read",
-		);
-	}
-
-	if (subject.companyDomain && subject.name && contextReady) {
-		const charge = spend(2);
+	if (subject.companyDomain && subject.name) {
+		const charge = spend(CONTEXT.cost.site);
 		if (!charge.ok) return { found: false, tried, reason: charge.reason };
 
-		const fromSite = await fromEmployerSite(subject);
+		const fromSite = await fromEmployerSite(
+			subject.companyDomain,
+			subject.name,
+		);
 		if (fromSite) return { found: true, candidate: fromSite };
 		tried.push("Not on the company's own site");
 	}
@@ -86,69 +82,15 @@ export async function findPortrait(
 	return { found: false, tried };
 }
 
-const TEAM_SCHEMA: JsonSchema = {
-	type: "object",
-	properties: {
-		people: {
-			type: "array",
-			items: {
-				type: "object",
-				properties: {
-					name: { type: "string" },
-					title: { type: "string" },
-					photoUrl: {
-						type: "string",
-						description: "Absolute URL of this person's headshot.",
-					},
-				},
-				required: ["name"],
-			},
-		},
-	},
-	required: ["people"],
-};
-
-const teamPage = z
-	.object({
-		people: z
-			.array(
-				z
-					.object({
-						name: z.string().nullable().catch(null),
-						photoUrl: z.string().nullable().catch(null),
-					})
-					.catch({ name: null, photoUrl: null }),
-			)
-			.catch([]),
-	})
-	.catch({ people: [] });
-
 async function fromEmployerSite(
-	subject: PortraitSubject,
+	companyDomain: string,
+	name: string,
 ): Promise<PortraitCandidate | null> {
-	const result = await extract(
-		`https://${subject.companyDomain}`,
-		TEAM_SCHEMA,
-		`Find the team, people, about or leadership page for ${subject.companyName ?? subject.companyDomain}. ` +
-			"List every named person shown with a headshot, giving the photograph's absolute URL. " +
-			"Do not include stock photography, customer logos, or people who are not staff.",
-	);
+	const portraits = await teamPortraits(companyDomain);
 
-	if (result.outcome !== "found") return null;
+	const match = portraits.find((portrait) => namesMatch(portrait.name, name));
 
-	for (const person of teamPage.parse(result.data).people) {
-		const { name, photoUrl } = person;
-		if (!name || !photoUrl) continue;
-		if (!namesMatch(name, subject.name)) continue;
-
-		try {
-			const parsed = new URL(photoUrl);
-			if (parsed.protocol !== "https:" && parsed.protocol !== "http:") continue;
-			return { source: "employer-site", url: parsed.toString() };
-		} catch {}
-	}
-
-	return null;
+	return match ? { source: "employer-site", url: match.photoUrl } : null;
 }
 
 function githubLogin(raw: string | null): string | null {
