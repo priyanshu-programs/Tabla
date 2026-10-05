@@ -70,7 +70,7 @@ export function TeamAgentsIndex({ initialAgents }: { initialAgents: Agents }) {
 					</p>
 					<Link
 						href={workspaceUrl("/chat")}
-						className="mt-4 text-primary text-xs hover:underline"
+						className="mt-4 text-foreground text-xs underline underline-offset-4 hover:no-underline"
 					>
 						Open chat
 					</Link>

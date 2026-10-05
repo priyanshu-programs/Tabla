@@ -253,7 +253,7 @@ function ExpandedRun({ run }: { run: RunRow }) {
 				<RunMeta label="Trigger" value={humanStatus(run.triggerType)} />
 				<RunMeta
 					label="Initiated by"
-					value={run.initiatedBy?.name ?? "Eve scheduler"}
+					value={run.initiatedBy?.name ?? "Tabla schedule"}
 				/>
 				<RunMeta label="Model" value={run.modelId ?? "Gateway default"} />
 				<RunMeta label="Version" value={String(run.version.number)} last />

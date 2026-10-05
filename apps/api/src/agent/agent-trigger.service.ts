@@ -176,7 +176,7 @@ export class AgentTriggerService {
 		return this.enqueue(
 			{
 				kind: "slack-channel-join",
-				reason: `Add Comp AI to #${channelName}`,
+				reason: `Add Tabla to #${channelName}`,
 				priority: PRIORITY.slackJoin,
 				budget: 1,
 				subject: { path: ["channelId"], value: channelId },
@@ -555,6 +555,17 @@ export class AgentTriggerService {
 		void this.redeliverCancellations();
 	}
 
+	async tick(): Promise<boolean> {
+		const reached = await this.post(
+			AGENT_DISPATCH.tick.path,
+			undefined,
+			AGENT_DISPATCH.tick.timeoutMs,
+		);
+		await this.redeliverCancellations();
+
+		return reached;
+	}
+
 	private poke(): void {
 		this.pokeRoute("/internal/crm/dispatch");
 	}
@@ -566,6 +577,7 @@ export class AgentTriggerService {
 	private async post(
 		path: string,
 		body?: Record<string, string>,
+		timeoutMs: number = AGENT_DISPATCH.poke.timeoutMs,
 	): Promise<boolean> {
 		const agent = bridge();
 		if (!agent) return false;
@@ -580,7 +592,7 @@ export class AgentTriggerService {
 				method: "POST",
 				headers,
 				body: body ? JSON.stringify(body) : undefined,
-				signal: AbortSignal.timeout(AGENT_DISPATCH.poke.timeoutMs),
+				signal: AbortSignal.timeout(timeoutMs),
 			});
 
 			if (!response.ok) {

@@ -1,6 +1,6 @@
 {
-	"name": "Comp AI CRM",
-	"short_name": "Comp AI CRM",
+	"name": "Tabla",
+	"short_name": "Tabla",
 	"icons": [
 		{
 			"src": "/web-app-manifest-192x192.png",
@@ -15,7 +15,7 @@
 			"purpose": "maskable"
 		}
 	],
-	"theme_color": "#ffffff",
-	"background_color": "#ffffff",
+	"theme_color": "#b3ff00",
+	"background_color": "#fbfbf9",
 	"display": "standalone"
 }

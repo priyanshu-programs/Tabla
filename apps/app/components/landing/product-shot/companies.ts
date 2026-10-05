@@ -10,14 +10,14 @@ export type MockCompany = {
 };
 
 export const OWNER = {
-	name: "Patrick Onusko",
+	name: "Maya Chen",
 	avatar: "/landing/avatar-patrick.jpg",
 };
 
 export const MOCK_COMPANIES: MockCompany[] = [
 	{
-		name: "Comp AI",
-		domain: "trycomp.ai",
+		name: "Northstar Goods",
+		domain: "northstar.example",
 		industry: "Retail & E-commerce",
 		owner: OWNER,
 		contacts: "1",
@@ -25,39 +25,32 @@ export const MOCK_COMPANIES: MockCompany[] = [
 		lastActivity: "2h ago",
 	},
 	{
-		name: "Tristar Fulfillment",
-		domain: "tristarfulfillment.com",
-		logo: { src: "/landing/logos/tristar-fulfillment.webp", invert: true },
+		name: "Acorn Supply",
+		domain: "acorn.example",
 	},
 	{
-		name: "AuditBot",
-		domain: "auditbot.co",
-		logo: { src: "/landing/logos/auditbot.webp" },
+		name: "Juniper Labs",
+		domain: "juniper.example",
 	},
 	{
-		name: "Tawkeed",
-		domain: "tawkeed.ai",
-		logo: { src: "/landing/logos/tawkeed.webp" },
+		name: "Atlas Freight",
+		domain: "atlas.example",
 	},
 	{
-		name: "Piku",
-		domain: "piku.com",
-		logo: { src: "/landing/logos/piku.webp" },
+		name: "Harbor Health",
+		domain: "harbor.example",
 	},
 	{
-		name: "Roo Capital",
-		domain: "roocapital.com",
-		logo: { src: "/landing/logos/roo-capital.webp" },
+		name: "Pine Finance",
+		domain: "pine.example",
 	},
 	{
-		name: "Social Good Software",
-		domain: "socialgoodsoftware.com",
-		logo: { src: "/landing/logos/social-good-software.webp" },
+		name: "Field Notes",
+		domain: "fieldnotes.example",
 	},
 	{
-		name: "Ridgetop",
-		domain: "ridgetoptech.com",
-		logo: { src: "/landing/logos/ridgetop.webp" },
+		name: "Cedar Works",
+		domain: "cedar.example",
 	},
 ];
 

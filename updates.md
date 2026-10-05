@@ -24,6 +24,14 @@ The log of every change to this repository. `AGENTS.md` makes it mandatory.
 
 ---
 
+## 2026-10-06 02:35 IST — Claude — Rebrand, telemetry removal, Phase 8 hosting, workflow files
+- Changed: all rebrand files (logo, theme, landing, sign-in), telemetry module deleted, Phase 8 hosting infra, `AGENTS.md`, `SECURITY.md`, `CONTRIBUTING.md`, `README.md`, `CHANGELOG.md`, `.githooks/pre-commit`, `docs/hosting.md`, `infra/clock/`, `apps/api/src/agent/agent-tick.controller.ts`, `packages/ui` motion components, `packages/context` remaining files.
+- Why: Rename from trycompai/crm to Tabla; remove original telemetry; add Cloudflare Worker clock for free-tier hosting; add mandatory workflow hook.
+- Checked: See previous entries. Build and type check pass.
+- Not done: Deploy not done. `graft build` not run.
+
+---
+
 ## 2026-10-06 02:30 IST — Claude — Phase 5 check: shared Button in landing CTAs
 - Changed: `apps/app/components/landing/hero.tsx`, `apps/app/components/landing/closing-cta.tsx`
 - Why: Both files used raw `<Link>` styled as buttons, against `docs/design.md`. Replaced with `<Button asChild>` from `@crm/ui/components/button`, matching `landing-nav.tsx`.

@@ -104,8 +104,9 @@ task row; exists because the API may not call Context.
 ### Blank fields are filled on the dispatch tick
 
 `sweepBlankFacts` (`lib/blank-facts.ts`) applies every pending suggestion whose field is
-still empty and clears the ones that have stopped saying anything. It runs at the top of
-`schedules/dispatch.ts`, every minute, over **every contact in the workspace** — it is a
+still empty and clears the ones that have stopped saying anything. It runs on every
+clock tick — `POST /internal/crm/tick` and `schedules/dispatch.ts` — and **not** on the
+per-task poke, over **every contact in the workspace** — it is a
 database pass with no session, no model, no task row and no credits, so there is nothing
 to ration and nobody to scope it to.
 
@@ -124,7 +125,8 @@ to ration and nobody to scope it to.
 
 ### Stale rows are closed on the dispatch tick
 
-`reconcileStaleTasks` (`lib/stale-tasks.ts`) runs before `drainAll`, every minute. Like
+`reconcileStaleTasks` (`lib/stale-tasks.ts`) runs before `drainAll`, on every poke and
+every clock tick. Like
 the blank-field pass it is a database pass with no session, no model and no credits. It
 closes rows that are provably done or provably dead, so the queue a rep reads is the
 work that is actually happening.
@@ -654,6 +656,28 @@ leaves on. Watch the agent pane; the session ids it returns are also streamable 
 `eve start` on a built app *does* run the schedule, and so does Vercel, where
 each `defineSchedule` becomes a Cron Job. Dev is the only place the clock is
 missing.
+
+### The clock in production is not the schedule
+
+`DISPATCH.schedule.cron` is daily, because **Vercel Hobby rejects a deploy that
+holds a cron more frequent than daily**. The schedule is a safety net. The clock
+is the Cloudflare Worker in `infra/clock`, which calls the API's
+`POST /internal/agent/tick` every 30 minutes; the API relays it to
+`POST /internal/crm/tick` with the bridge secret.
+
+- **`/internal/crm/tick` is the whole schedule body**: `sweepBlankFacts`,
+  `reconcileStaleTasks`, both lanes, deployed agent runs and builder chats.
+  `/internal/crm/dispatch` stays the per-task poke and runs no sweep, because forty
+  new contacts poke forty times.
+- **The Worker never holds `AGENT_BRIDGE_SECRET`.** That secret mints rep tokens.
+  The Worker holds `CRON_SECRET`, which starts idempotent jobs and nothing else.
+- **The tick is awaited, the poke is not.** `AgentTriggerService.tick()` waits up
+  to `AGENT_DISPATCH.tick.timeoutMs` for the agent's `202`, because a serverless
+  function freezes a detached promise. An agent that does not answer is a `502`,
+  and the Worker run shows red.
+- **`dispatch-health` reports overdue work between ticks.** `sweep.staleQueueMs`
+  is five minutes and the tick is thirty, so a task that only the clock starts
+  reads as overdue until the next tick. That is the interval, not a fault.
 
 ### The continuation token you write is not the one you read
 

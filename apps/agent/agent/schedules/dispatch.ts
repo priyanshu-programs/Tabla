@@ -7,10 +7,11 @@ import {
 	queueDueAgentRuns,
 } from "../lib/custom-agent-dispatch";
 import { brief, drainAll, taskAuth } from "../lib/dispatch";
+import { DISPATCH } from "../lib/dispatch-config";
 import { reconcileStaleTasks } from "../lib/stale-tasks";
 
 export default defineSchedule({
-	cron: "* * * * *",
+	cron: DISPATCH.schedule.cron,
 	async run({ receive, waitUntil, appAuth }) {
 		waitUntil(
 			Promise.all([

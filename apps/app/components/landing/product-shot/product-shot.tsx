@@ -4,8 +4,8 @@ import Group from "@carbon/icons-react/es/Group";
 import Partnership from "@carbon/icons-react/es/Partnership";
 import Settings from "@carbon/icons-react/es/Settings";
 import Logo from "@crm/ui/components/logo";
+import { Reveal } from "@crm/ui/components/motion/reveal";
 import Image from "next/image";
-import { BuiltWith } from "../built-with";
 import { CompaniesList, CompaniesPage } from "./companies-page";
 import { CompanyDrawer, CompanySheet } from "./company-sheet";
 
@@ -19,35 +19,40 @@ const RAIL = [
 
 export function ProductShot() {
 	return (
-		<section className="relative flex w-full shrink-0 flex-col items-center px-6 pt-20">
-			<div
-				role="img"
-				aria-label="The companies list with an account open on its Agent tab"
-				className="w-[1183px] max-w-full select-none overflow-clip rounded-xl border border-border bg-background"
-			>
-				<div className="relative hidden h-[690px] w-[1182px] shrink-0 flex-col overflow-clip lg:flex">
-					<div className="flex h-full w-[1392px] shrink-0 flex-col">
-						<AppHeader />
-						<div className="flex min-h-0 grow">
-							<AppRail />
-							<CompaniesPage />
+		<section className="relative flex w-full shrink-0 flex-col items-center px-5 pt-14 sm:px-6">
+			<Reveal delaySecs={0.1} className="flex w-full flex-col items-center">
+				<div
+					role="img"
+					aria-label="The companies list with an account open on its Agent tab"
+					className="w-[1183px] max-w-full select-none overflow-clip rounded-xl border border-border bg-background"
+				>
+					<div className="relative hidden h-[690px] w-[1182px] shrink-0 flex-col overflow-clip lg:flex">
+						<div className="flex h-full w-[1392px] shrink-0 flex-col">
+							<AppHeader />
+							<div className="flex min-h-0 grow">
+								<AppRail />
+								<CompaniesPage />
+							</div>
 						</div>
+
+						<div className="absolute inset-y-0 right-[211.5px] left-0 bg-black/55 backdrop-blur-[4px]" />
+						<CompanySheet />
 					</div>
 
-					<div className="absolute inset-y-0 right-[211.5px] left-0 bg-black/55 backdrop-blur-[4px]" />
-					<CompanySheet />
+					<div className="relative flex h-[600px] w-full flex-col overflow-clip lg:hidden">
+						<AppHeader />
+						<CompaniesList />
+
+						<div className="absolute inset-0 bg-black/55 backdrop-blur-[3px]" />
+						<CompanyDrawer />
+					</div>
 				</div>
-
-				<div className="relative flex h-[600px] w-full flex-col overflow-clip lg:hidden">
-					<AppHeader />
-					<CompaniesList />
-
-					<div className="absolute inset-0 bg-black/55 backdrop-blur-[3px]" />
-					<CompanyDrawer />
-				</div>
-			</div>
-
-			<BuiltWith />
+			</Reveal>
+			<Reveal className="mt-4 flex w-full justify-center">
+				<p className="font-mono text-muted-foreground text-xs">
+					Live mock of the companies list with the Agent tab open.
+				</p>
+			</Reveal>
 		</section>
 	);
 }
@@ -60,9 +65,7 @@ function AppHeader() {
 					<Logo className="size-5 shrink-0 text-foreground" />
 				</span>
 				<span className="mx-1 h-5 w-px shrink-0" />
-				<span className="line-clamp-1 font-medium text-sm/[142%]">
-					Comp AI CRM
-				</span>
+				<span className="line-clamp-1 font-medium text-sm/[142%]">Tabla</span>
 			</div>
 
 			<span className="ml-auto flex size-8 shrink-0 items-center justify-center rounded-md">

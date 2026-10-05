@@ -77,14 +77,14 @@ request.
 - **Both reads run concurrently**, but order decides which is *asked* — the research
   read is never made while onboarding is open.
 - **An unreachable API fails open** (`unknown` lets the request through).
-- **`/sign-in`, `/grant-access`, `/eve` are ungated.** `/sign-in` is the only path a
-  stranger may read; `/` joins it only when `IS_MARKETING` is set.
+- **`/sign-in`, `/grant-access`, `/eve` are ungated.** A stranger can also read `/`.
+- **A signed-in request to `/` redirects to the current workspace slug.**
 - **There is no way past the key gate but to answer** — Skip stranded installs, every
   later company sitting `PENDING` with nothing saying so.
 
 ### The name is also the URL
 
-Served under the workspace slug (`/comp-ai/companies`). **Cosmetic, not tenancy** —
+Served under the workspace slug (`/acme/companies`). **Cosmetic, not tenancy** —
 every query still resolves through `WORKSPACE_ID`.
 
 - **The slug is the plugin's column**, written by `workspaceSlug(name)`
@@ -250,7 +250,7 @@ row is still there, just filtered out of every list.
   different from the cron.
 
 **Pruning**: `ArchiveRetentionController` (`internal/archive/prune`, `CRON_SECRET`-gated,
-`apps/api/vercel.json`) reads `AppSetting.archiveRetentionDays`
+called daily by the clock in `infra/clock`) reads `AppSetting.archiveRetentionDays`
 (`readArchiveRetentionDays`, `@crm/db/settings`, default 180) and calls each service's
 `purgeExpired(before)` — `findMany({ archivedAt: { lte: before } })` capped at
 `ARCHIVE.prune.maxBatch` (`archive/archive-config.ts`), then `purge` per row through

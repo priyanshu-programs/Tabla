@@ -1127,7 +1127,7 @@ schema, two entry points.
 ### The data table, and its rules
 
 Ported from `/Users/lewiscarhart/mvp/apps/app/components/data-table/`, rewriting
-`@trycompai/ui` → `@crm/ui`:
+the source UI package imports to `@crm/ui`:
 
 | Source | Destination |
 | --- | --- |
@@ -1346,7 +1346,7 @@ in it.
 
 - **Vercel Blob store — done.** `crm-attachments`
   (`store_pXY7wYOD7ccPGUNP`), region `iad1`, **private access**, in the
-  `comp-ai-test` team. Not yet attached to a project, because the repo has no
+  original test team. Not yet attached to a project, because the repo has no
   Vercel projects yet; attaching it in Phase 1 is what populates
   `BLOB_READ_WRITE_TOKEN`. Private access confirms §7's design — the CLI
   requires `--access public|private` and exposes `blob presign`, so

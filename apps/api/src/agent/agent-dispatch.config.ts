@@ -3,6 +3,7 @@ const MINUTE_MS = 60 * SECOND_MS;
 
 export const AGENT_DISPATCH = {
 	poke: { timeoutMs: 2 * SECOND_MS },
+	tick: { path: "/internal/crm/tick", timeoutMs: 20 * SECOND_MS },
 	heartbeat: { everyMs: MINUTE_MS },
 	cancel: {
 		errorCode: "CANCELLED_BY_USER",

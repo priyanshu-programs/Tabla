@@ -1,6 +1,10 @@
 const MINUTE_MS = 60_000;
 
 export const DISPATCH = {
+	schedule: {
+		cron: "0 3 * * *",
+	},
+
 	visible: {
 		batch: 60,
 		concurrency: 6,

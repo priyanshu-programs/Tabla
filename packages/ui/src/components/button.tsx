@@ -22,7 +22,7 @@ const buttonVariants = cva(
 					"bg-destructive text-destructive-foreground shadow-2xs hover:bg-[color-mix(in_oklch,var(--destructive),black_12%)] active:bg-[color-mix(in_oklch,var(--destructive),black_22%)] active:shadow-none focus-visible:ring-destructive/50",
 				contrast:
 					"bg-foreground text-background shadow-2xs hover:bg-foreground/90 active:bg-foreground/80 active:shadow-none",
-				link: "text-primary underline-offset-4 hover:underline",
+				link: "text-foreground underline underline-offset-4 hover:no-underline",
 			},
 			size: {
 				default:

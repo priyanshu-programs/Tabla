@@ -1,13 +1,22 @@
+import { Button } from "@crm/ui/components/button";
+import { Wordmark } from "@crm/ui/components/wordmark";
 import Link from "next/link";
-import { Wordmark } from "./wordmark";
 
 export function LandingNav() {
 	return (
-		<header className="relative flex h-16 w-full shrink-0 items-center justify-center border-border border-b">
-			<nav className="flex w-full max-w-6xl items-center gap-8 px-6">
-				<Link href="/" aria-label="Homepage">
+		<header className="flex h-16 w-full items-center justify-center border-border border-b">
+			<nav className="flex w-full max-w-6xl items-center gap-2 px-5 sm:gap-6 sm:px-6">
+				<Link href="/" aria-label="Tabla home">
 					<Wordmark />
 				</Link>
+				<div className="ml-auto flex items-center gap-2">
+					<Button asChild variant="ghost" size="lg">
+						<Link href="/sign-in">Sign in</Link>
+					</Button>
+					<Button asChild size="lg">
+						<Link href="/sign-in">Get started</Link>
+					</Button>
+				</div>
 			</nav>
 		</header>
 	);

@@ -17,10 +17,10 @@ const CONFIG: TrackingConfig = {
 	honourDnt: true,
 	cookieDays: 395,
 	hosts: [
-		{ host: "trycomp.ai", scope: "SITE_AND_SUBDOMAINS" },
-		{ host: "www.trycomp.ai", scope: "EXACT_HOST" },
-		{ host: "docs.trycomp.ai", scope: "EXACT_HOST" },
-		{ host: "app.trycomp.ai", scope: "EXACT_HOST" },
+		{ host: "atlas.example", scope: "SITE_AND_SUBDOMAINS" },
+		{ host: "www.atlas.example", scope: "EXACT_HOST" },
+		{ host: "docs.atlas.example", scope: "EXACT_HOST" },
+		{ host: "app.atlas.example", scope: "EXACT_HOST" },
 	],
 };
 
@@ -124,7 +124,7 @@ describe("the loader finds the site id however the page was built", () => {
 		const source = trackerSource(CONFIG, "https://crm.example.com/api/t/e");
 
 		expect(source).toContain("cmp_8f3ad91c");
-		expect(source).toContain("docs.trycomp.ai");
+		expect(source).toContain("docs.atlas.example");
 		expect(source).not.toContain("/api/t/config");
 	});
 });

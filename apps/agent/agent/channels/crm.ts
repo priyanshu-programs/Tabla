@@ -3,8 +3,9 @@ import { EnrichmentStatus, Prisma } from "@crm/db";
 import { MAX_ATTEMPTS } from "@crm/db/agent-tasks";
 import { schemas } from "@crm/validation";
 import { eveTurnFailure } from "@crm/validation/eve-stream";
-import { defineChannel, GET, POST } from "eve/channels";
+import { defineChannel, GET, POST, type SendFn } from "eve/channels";
 import { z } from "zod";
+import { sweepBlankFacts } from "../lib/blank-facts";
 import { persistBuilderInputRequest } from "../lib/builder-input";
 import {
 	builderIdFromToken,
@@ -64,6 +65,17 @@ function authorised(request: Request): boolean {
 	if (candidate.length !== expected.length) return false;
 
 	return timingSafeEqual(candidate, expected);
+}
+
+async function drainQueues(send: SendFn): Promise<void> {
+	await reconcileStaleTasks();
+	await drainAll((task) =>
+		send(brief(task), {
+			auth: taskAuth(task),
+			continuationToken: taskToken(task.id),
+		}),
+	);
+	await drainAgentRuns(send);
 }
 
 export function taskToken(taskId: string): string {
@@ -131,17 +143,21 @@ export default defineChannel({
 				return new Response("Unauthorized", { status: 401 });
 			}
 
+			waitUntil(drainQueues(send));
+
+			return new Response(null, { status: 202 });
+		}),
+
+		POST("/internal/crm/tick", async (request, { send, waitUntil }) => {
+			if (!authorised(request)) {
+				return new Response("Unauthorized", { status: 401 });
+			}
+
 			waitUntil(
-				(async () => {
-					await reconcileStaleTasks();
-					await drainAll((task) =>
-						send(brief(task), {
-							auth: taskAuth(task),
-							continuationToken: taskToken(task.id),
-						}),
-					);
-					await drainAgentRuns(send);
-				})(),
+				Promise.all([
+					sweepBlankFacts(),
+					drainQueues(send).then(() => drainBuilder(send)),
+				]),
 			);
 
 			return new Response(null, { status: 202 });

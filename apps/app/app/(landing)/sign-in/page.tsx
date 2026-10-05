@@ -46,8 +46,8 @@ export default function SignInPage({ searchParams }: PageProps<"/sign-in">) {
 			<Suspense
 				fallback={
 					<AuthHeading
-						title="Welcome back"
-						description="Sign in with your account to continue."
+						title="Sign in to Tabla"
+						description="An approved first sign-in creates your Tabla account."
 					/>
 				}
 			>
@@ -89,8 +89,8 @@ async function SignIn({
 		return (
 			<>
 				<AuthHeading
-					title="No way in yet"
-					description="This CRM has no sign-in method configured, so nobody can get in — including you."
+					title="No sign-in method"
+					description="Tabla needs Google, Microsoft, or SSO before anyone can sign in."
 				/>
 
 				<p className="text-center text-muted-foreground text-sm/5">
@@ -106,8 +106,8 @@ async function SignIn({
 	return (
 		<>
 			<AuthHeading
-				title="Welcome back"
-				description="Sign in with your account to continue."
+				title="Sign in to Tabla"
+				description="An approved first sign-in creates your Tabla account."
 			/>
 
 			{showSso ? <SsoSignIn providers={providers} /> : null}

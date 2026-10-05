@@ -1,11 +1,44 @@
 import { readText, safeFetch } from "@crm/db/safe-fetch";
 import { CONTEXT_ENGINE } from "./config";
 
+const SERVER_ERROR = 500;
+
 export type PageRead =
 	| { outcome: "read"; url: URL; html: string }
 	| { outcome: "unreachable" }
 	| { outcome: "refused"; status: number }
 	| { outcome: "not-html" };
+
+export type ReadPage = Extract<PageRead, { outcome: "read" }>;
+
+export type PageFailure =
+	| { outcome: "skipped"; reason: string }
+	| { outcome: "failed"; reason: string; retryable: boolean };
+
+export function pageFailure(read: Exclude<PageRead, ReadPage>): PageFailure {
+	if (read.outcome === "not-html") {
+		return {
+			outcome: "skipped",
+			reason: "The site did not return a web page.",
+		};
+	}
+
+	if (read.outcome === "refused" && read.status < SERVER_ERROR) {
+		return {
+			outcome: "skipped",
+			reason: `The site refused the request with status ${read.status}.`,
+		};
+	}
+
+	return {
+		outcome: "failed",
+		reason:
+			read.outcome === "refused"
+				? `The site answered with status ${read.status}.`
+				: "The site did not answer in time.",
+		retryable: true,
+	};
+}
 
 export async function readPage(url: string): Promise<PageRead> {
 	const result = await safeFetch(url, {

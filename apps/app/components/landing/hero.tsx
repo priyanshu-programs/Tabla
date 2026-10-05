@@ -1,24 +1,50 @@
-import { GitHubStarButton } from "./github-star-button";
-import { SetupPromptButton } from "./setup-prompt-button";
+import { Button } from "@crm/ui/components/button";
+import { LANDING_MOTION } from "@crm/ui/components/motion/config";
+import { Marker } from "@crm/ui/components/motion/marker";
+import { Reveal } from "@crm/ui/components/motion/reveal";
+import Link from "next/link";
 
 export function Hero() {
+	const stagger = LANDING_MOTION.hero.staggerSecs;
+
 	return (
-		<section className="relative flex w-full shrink-0 flex-col items-center px-6 pt-20 pb-10 md:pt-30">
-			<div className="relative flex w-full max-w-6xl flex-col items-center gap-7">
-				<h1 className="max-w-[900px] text-balance text-center font-semibold text-5xl/[52px] tracking-tight md:text-[72px]/[76px]">
-					The CRM built for Agents
-				</h1>
-
-				<p className="max-w-[640px] text-pretty text-center text-muted-foreground text-lg/[28px] md:text-xl/[30px]">
-					Humans shouldn't be manually moving pipeline. The first agentic CRM
-					experience — durable research agents that read your team's inbox,
-					enrich companies and contacts, and create agentic workflows.
-				</p>
-
-				<div className="flex flex-wrap items-center justify-center gap-3 pt-3">
-					<SetupPromptButton location="hero" />
-					<GitHubStarButton location="hero" />
-				</div>
+		<section className="flex w-full flex-col items-center px-5 pt-20 pb-8 sm:px-6 md:pt-28">
+			<div className="flex w-full max-w-5xl flex-col items-center gap-7">
+				<Reveal className="flex w-full flex-col items-center">
+					<p className="rounded-full bg-primary px-3 py-1.5 font-semibold text-primary-foreground text-xs">
+						AI-native customer work
+					</p>
+				</Reveal>
+				<Reveal
+					className="flex w-full flex-col items-center"
+					delaySecs={stagger}
+				>
+					<h1 className="max-w-[880px] text-balance text-center font-semibold text-5xl/12 tracking-tighter md:text-7xl/18">
+						Your CRM should keep itself <Marker>up to date.</Marker>
+					</h1>
+				</Reveal>
+				<Reveal
+					className="flex w-full flex-col items-center"
+					delaySecs={stagger * 2}
+				>
+					<p className="max-w-2xl text-pretty text-center text-lg/7 text-muted-foreground md:text-xl/8">
+						Tabla brings current records, customer context, and follow-up work
+						together.
+					</p>
+				</Reveal>
+				<Reveal
+					className="flex w-full flex-col items-center"
+					delaySecs={stagger * 3}
+				>
+					<div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+						<Button asChild size="lg">
+							<Link href="/sign-in">Get started</Link>
+						</Button>
+						<Button asChild size="lg" variant="outline">
+							<Link href="#product-preview">See Tabla in action</Link>
+						</Button>
+					</div>
+				</Reveal>
 			</div>
 		</section>
 	);

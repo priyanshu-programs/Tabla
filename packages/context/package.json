@@ -6,8 +6,11 @@
 	"exports": {
 		"./brand": "./src/brand.ts",
 		"./config": "./src/config.ts",
+		"./host": "./src/host.ts",
 		"./html": "./src/html.ts",
-		"./page": "./src/page.ts"
+		"./page": "./src/page.ts",
+		"./site": "./src/site.ts",
+		"./team": "./src/team.ts"
 	},
 	"scripts": {
 		"check-types": "tsc --noEmit",

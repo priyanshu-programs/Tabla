@@ -13,6 +13,9 @@ const META_ATTRIBUTES = ["property", "name"] as const;
 
 const IMAGE_SOURCES = ["src", "data-src", "data-lazy-src"] as const;
 
+const NOISE =
+	"script, style, noscript, svg, template, iframe, nav, footer, form";
+
 export function parsePage(html: string, url: URL): Page {
 	return { url, root: parse(html) };
 }
@@ -87,25 +90,49 @@ export function anchors(page: Page): Anchor[] {
 	});
 }
 
+export function imageUrl(image: HTMLElement, base: URL): URL | null {
+	const source = IMAGE_SOURCES.map((name) => image.getAttribute(name)).find(
+		(value) => value && !value.trim().startsWith("data:"),
+	);
+
+	const url = resolve(source, base);
+
+	return url && isWeb(url) ? url : null;
+}
+
+export function imageHint(image: HTMLElement, url: URL): string {
+	return [
+		image.getAttribute("class"),
+		image.getAttribute("id"),
+		image.getAttribute("alt"),
+		url.pathname,
+	]
+		.filter(Boolean)
+		.join(" ")
+		.toLowerCase();
+}
+
 export function pictures(page: Page): Picture[] {
 	return page.root.querySelectorAll("img").flatMap((image) => {
-		const source = IMAGE_SOURCES.map((name) => image.getAttribute(name)).find(
-			(value) => value && !value.trim().startsWith("data:"),
-		);
+		const url = imageUrl(image, page.url);
+		if (!url) return [];
 
-		const url = resolve(source, page.url);
-		if (!url || !isWeb(url)) return [];
-
-		const hint = [
-			image.getAttribute("class"),
-			image.getAttribute("id"),
-			image.getAttribute("alt"),
-			url.pathname,
-		]
-			.filter(Boolean)
-			.join(" ")
-			.toLowerCase();
-
-		return [{ url, hint, region: regionOf(image) }];
+		return [{ url, hint: imageHint(image, url), region: regionOf(image) }];
 	});
+}
+
+export function visibleText(html: string): string {
+	const root = parse(html);
+
+	for (const element of root.querySelectorAll(NOISE)) element.remove();
+
+	const body = root.querySelector("body") ?? root;
+
+	return body.structuredText
+		.split("\n")
+		.flatMap((line) => {
+			const text = clean(line);
+			return text ? [text] : [];
+		})
+		.join("\n");
 }

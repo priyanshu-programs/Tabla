@@ -67,6 +67,45 @@ export const CONTEXT_ENGINE = {
 		],
 	},
 
+	site: {
+		maxPages: 6,
+		maxCharsPerPage: 6_000,
+		concurrency: 3,
+		maxPathDepth: 2,
+		robotsMaxBytes: 64 * KILOBYTE,
+		headerBonus: 1,
+		sections: [
+			{ pattern: /\b(about|company|who-we-are|our-story)\b/i, weight: 5 },
+			{ pattern: /\b(pricing|plans)\b/i, weight: 5 },
+			{
+				pattern: /\b(products?|platform|features|solutions|services)\b/i,
+				weight: 4,
+			},
+			{
+				pattern: /\b(customers|clients|case-studies|stories)\b/i,
+				weight: 4,
+			},
+			{ pattern: /\b(news|newsroom|press|blog|changelog)\b/i, weight: 2 },
+			{ pattern: /\b(team|people|leadership|founders)\b/i, weight: 2 },
+		],
+		skipPath:
+			/\b(login|log-in|signin|sign-in|signup|sign-up|register|privacy|terms|legal|cookies?|cart|checkout|account)\b/i,
+		skipFile: /\.(pdf|png|jpe?g|gif|svg|webp|zip|mp4|mov|xml|json|css|js)$/i,
+	},
+
+	team: {
+		maxPages: 3,
+		ancestorDepth: 3,
+		maxNameWords: 5,
+		maxNameLength: 60,
+		pagePattern:
+			/\b(team|people|leadership|founders|management|staff|about|company|who-we-are)\b/i,
+		nameLabel: /^(photo|picture|portrait|headshot|image|avatar)\s+(of\s+)?/i,
+		nameSeparator: /\s+[|,–—-]\s+|\s*[|,]\s*/,
+		skipHint: /logo|icon|sprite|badge|flag|banner|illustration/,
+		headingSelector: "h1, h2, h3, h4, h5, h6, figcaption, strong",
+	},
+
 	links: {
 		pricingPath: /^\/(pricing|plans|prices)\/?$/i,
 		careersPath: /^\/(careers?|jobs|join-us|work-with-us|hiring)\/?$/i,

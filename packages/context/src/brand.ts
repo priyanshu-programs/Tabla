@@ -1,5 +1,4 @@
 import { iconsFromHtml, servesImage } from "@crm/db/favicon";
-import { resolvesToPublicHost } from "@crm/db/safe-fetch";
 import type { JsonLdNode } from "@crm/validation/json-ld";
 import type {
 	SiteBrand,
@@ -8,6 +7,8 @@ import type {
 } from "@crm/validation/site-brand";
 import { parseWebManifest } from "@crm/validation/web-manifest";
 import { CONTEXT_ENGINE } from "./config";
+import { readHome } from "./home";
+import { labelOf, squash, within } from "./host";
 import {
 	type Anchor,
 	anchors,
@@ -22,7 +23,7 @@ import {
 	resolve,
 	titleText,
 } from "./html";
-import { type PageRead, readPage, readResource } from "./page";
+import { type ReadPage, readResource } from "./page";
 
 export type BrandLookup =
 	| { outcome: "found"; brand: SiteBrand; sourceUrl: string }
@@ -57,38 +58,6 @@ const TITLE_SEPARATOR = /\s+[|\-–—·•:]\s+|\s*\|\s*/;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const RANK = { sameAs: 4, ownName: 2, chrome: 1 } as const;
-
-export function hostOf(domain: string): string | null {
-	const trimmed = domain.trim().toLowerCase();
-	if (!trimmed) return null;
-
-	try {
-		const url = new URL(
-			trimmed.includes("://") ? trimmed : `https://${trimmed}`,
-		);
-		const host = url.hostname.replace(/^www\./, "");
-		return host.includes(".") ? host : null;
-	} catch {
-		return null;
-	}
-}
-
-function bare(hostname: string): string {
-	return hostname.toLowerCase().replace(/^www\./, "");
-}
-
-function within(hostname: string, host: string): boolean {
-	const candidate = bare(hostname);
-	return candidate === host || candidate.endsWith(`.${host}`);
-}
-
-function squash(value: string): string {
-	return value.toLowerCase().replace(/[^a-z0-9]/g, "");
-}
-
-function labelOf(host: string): string {
-	return squash(host.split(".")[0] ?? "");
-}
 
 function isType(node: JsonLdNode, types: readonly string[]): boolean {
 	return node["@type"].some((type) => types.includes(type));
@@ -516,7 +485,7 @@ async function manifestColour(page: Page): Promise<string | null> {
 }
 
 async function completeBrand(
-	read: Extract<PageRead, { outcome: "read" }>,
+	read: ReadPage,
 	host: string,
 ): Promise<BrandLookup> {
 	const page = parsePage(read.html, read.url);
@@ -549,65 +518,10 @@ async function completeBrand(
 	return { outcome: "found", brand, sourceUrl: read.url.toString() };
 }
 
-function refusal(read: PageRead): BrandLookup {
-	if (read.outcome === "refused" && read.status < 500) {
-		return {
-			outcome: "skipped",
-			reason: `The site refused the request with status ${read.status}.`,
-		};
-	}
-
-	if (read.outcome === "not-html") {
-		return {
-			outcome: "skipped",
-			reason: "The site did not return a web page.",
-		};
-	}
-
-	return {
-		outcome: "failed",
-		reason:
-			read.outcome === "refused"
-				? `The site answered with status ${read.status}.`
-				: "The site did not answer in time.",
-		retryable: true,
-	};
-}
-
 export async function brandFromSite(domain: string): Promise<BrandLookup> {
-	const host = hostOf(domain);
+	const home = await readHome(domain);
 
-	if (!host) {
-		return { outcome: "skipped", reason: "That is not a web address." };
-	}
+	if (home.outcome !== "read") return home;
 
-	let last: PageRead | null = null;
-
-	for (const hostname of [host, `www.${host}`]) {
-		if (!(await resolvesToPublicHost(hostname))) continue;
-
-		const read = await readPage(`https://${hostname}`);
-
-		if (read.outcome !== "read") {
-			last = read;
-			continue;
-		}
-
-		const landed = bare(read.url.hostname);
-
-		if (within(landed, host)) return completeBrand(read, host);
-
-		if (labelOf(landed) === labelOf(host)) return completeBrand(read, landed);
-
-		return {
-			outcome: "skipped",
-			reason: `The domain redirects to another site, ${landed}.`,
-		};
-	}
-
-	if (!last) {
-		return { outcome: "skipped", reason: "No site answers at this domain." };
-	}
-
-	return refusal(last);
+	return completeBrand(home.page, home.host);
 }

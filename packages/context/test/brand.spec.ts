@@ -3,9 +3,9 @@ import {
 	brandColour,
 	draftBrand,
 	hasBrandData,
-	hostOf,
 	normaliseHex,
 } from "../src/brand";
+import { hostOf } from "../src/host";
 import { parsePage } from "../src/html";
 
 const HOST = "acme.com";

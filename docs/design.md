@@ -1,31 +1,71 @@
-# Design — Rules for AI Agents
+# Design rules
 
-- /packages/ui is the single source of truth for all UI.
-- Always use shared shadcn components from /packages/ui.
-- Do not override component styles with className.
-- Do not introduce custom border radii, spacing, colours, shadows, or other visual deviations.
-- Corners are rounded, from the scale only: `rounded-sm` (4px) for the smallest
-  controls, `rounded-md` (5px) for buttons, inputs and segments, `rounded-lg`
-  (8px) for surfaces that contain controls — popovers, dialogs, menus, table
-  shells. Never a literal radius at the call site.
-- `rounded-none` is still correct in one case: an element that must join its
-  neighbour edge to edge. The input inside an input group, the middle cells of
-  a selected date range, and the drawer handle are the existing examples.
-- If a component needs a new variant or style, implement it in /packages/ui so the entire application stays consistent.
+`packages/ui` is the single source of truth for shared interface components.
 
-## Colour
+Use shared shadcn components from that package.
 
-Flat white, neutral greys, and one brand green (`#006B4F`). The greys are
-untinted on purpose: there is no scene to tint them toward, and a tinted grey
-without a reason reads as indecision.
+Add new variants in the shared component.
 
-**Only two things are filled**: `primary` for the action you want, `destructive`
-for the one you cannot undo. Everything else — secondary, outline, ghost — is a
-white chip in light and a dark chip in dark. That is what keeps a rep's eye
-landing on *go* or *stop* and skimming past the rest.
+Do not override a shared component at its call site.
 
-`--primary` and `--destructive` hold the **same value in both themes**. A brand
-colour that changes per theme is not one colour, it is two, and both then need
-maintaining. The single exception is `--ring`, which lightens in dark: a fill
-carries the brand, but a ring only has to be seen, and `#006B4F` is too close to
-the dark background to register.
+## Typography
+
+Inter is the interface and wordmark typeface.
+
+Geist Mono is the code and technical-label typeface.
+
+Georgia is the serif typeface.
+
+The base tracking value is `-0.015em`.
+
+Use the shared tracking scale for tighter or wider text.
+
+## Color
+
+The palette uses warm neutral surfaces and one lime primary.
+
+The primary token is `oklch(0.9154 0.2402 128.2393)`.
+
+Reserve lime for filled controls, focus rings, and selected states.
+
+Use black text on lime fills.
+
+Do not use primary-colored text on light backgrounds.
+
+Use foreground text for links.
+
+Use destructive, success, warning, and information tokens for their named meanings.
+
+Use chart tokens for data series only.
+
+## Shape
+
+The base radius is `0.75rem`.
+
+The shared scale derives smaller and larger radii from that value.
+
+Use `rounded-sm` for compact controls.
+
+Use `rounded-md` for inputs and buttons.
+
+Use `rounded-lg` or `rounded-xl` for containing surfaces.
+
+Use square edges only when adjacent elements join.
+
+## Depth and motion
+
+The interface uses zero shadows.
+
+Use borders and surface contrast to show depth.
+
+Keep existing shared motion tokens.
+
+Respect reduced-motion preferences.
+
+## Themes
+
+Light and dark tokens live in `packages/ui/src/styles/globals.css`.
+
+`next-themes` follows the system preference by default.
+
+Authenticated users retain the existing theme control.

@@ -1392,7 +1392,7 @@ function DeployedAgentCard({
 			<div className="flex flex-col gap-1">
 				<p className="text-sm leading-5">{agent.name} is live.</p>
 				<p className="text-muted-foreground text-sm leading-5">
-					I created the Eve agent, applied its bounded CRM and integration
+					I created the Tabla agent, applied its bounded CRM and integration
 					access, and made it live for the team.
 				</p>
 			</div>
@@ -1416,7 +1416,7 @@ function DeployedAgentCard({
 							)
 						}
 					/>
-					<ReviewRow label="Runs in" value="Eve runtime · isolated sandbox" />
+					<ReviewRow label="Runs in" value="Tabla agent · isolated sandbox" />
 					<ReviewRow label="Owner" value={`Team · ${agent.createdBy.name}`} />
 				</div>
 				<AgentCardFooter note="The chat stays private. The agent is team-owned.">

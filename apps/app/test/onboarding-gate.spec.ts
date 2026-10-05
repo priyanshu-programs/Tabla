@@ -6,21 +6,13 @@ import { proxy } from "../proxy";
 
 const SESSION_COOKIE = `${AUTH_COOKIE_PREFIX}.session_token=abc.def`;
 
-const SLUG = "comp-ai";
+const SLUG = "atlas-labs";
 
 const realFetch = globalThis.fetch;
 
-const realMarketing = process.env.IS_MARKETING;
-
 afterEach(() => {
 	globalThis.fetch = realFetch;
-	marketing(realMarketing);
 });
-
-function marketing(value: string | undefined) {
-	if (value === undefined) delete process.env.IS_MARKETING;
-	else process.env.IS_MARKETING = value;
-}
 
 function stub(handler: (url: string) => Promise<Response>) {
 	globalThis.fetch = ((input: string | URL | Request) =>
@@ -126,8 +118,6 @@ describe("readWorkspaceGate", () => {
 
 describe("proxy", () => {
 	it("shows a stranger the landing page and nothing behind it", async () => {
-		marketing("true");
-
 		expect(redirectedTo(await proxy(request("/")))).toBeNull();
 		expect(redirectedTo(await proxy(request("/sign-in")))).toBeNull();
 		expect(redirectedTo(await proxy(request(`/${SLUG}`)))).toBe("/sign-in");
@@ -136,15 +126,7 @@ describe("proxy", () => {
 		);
 	});
 
-	it("sends a stranger to sign in when the install has no landing page", async () => {
-		marketing(undefined);
-
-		expect(redirectedTo(await proxy(request("/")))).toBe("/sign-in");
-		expect(redirectedTo(await proxy(request("/sign-in")))).toBeNull();
-	});
-
 	it("never aims a redirect at the sign-in page itself", async () => {
-		marketing(undefined);
 		setup({ onboarded: false });
 
 		expect(redirectedTo(await proxy(request("/sign-in")))).toBeNull();
@@ -154,17 +136,6 @@ describe("proxy", () => {
 		expect(
 			redirectedTo(await proxy(request("/sign-in?method=google"))),
 		).toBeNull();
-	});
-
-	it("reads the flag on every request, and only the literal true turns it on", async () => {
-		marketing("false");
-		expect(redirectedTo(await proxy(request("/")))).toBe("/sign-in");
-
-		marketing("1");
-		expect(redirectedTo(await proxy(request("/")))).toBe("/sign-in");
-
-		marketing("true");
-		expect(redirectedTo(await proxy(request("/")))).toBeNull();
 	});
 
 	it("ignores a neighbour's cookie from the parent domain", async () => {

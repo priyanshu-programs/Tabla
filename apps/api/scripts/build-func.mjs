@@ -169,7 +169,7 @@ writeFileSync(
 		maxDuration: 60,
 		memory: 1769,
 		environment: { NODE_ENV: "production" },
-		regions: ["iad1"],
+		regions: [process.env.API_REGION?.trim() || "iad1"],
 	}),
 );
 writeFileSync(
@@ -177,7 +177,6 @@ writeFileSync(
 	JSON.stringify({
 		version: 3,
 		routes: [{ src: "/(.*)", dest: "/api/index" }],
-		crons: [{ path: "/internal/sync/google", schedule: "*/5 * * * *" }],
 	}),
 );
 

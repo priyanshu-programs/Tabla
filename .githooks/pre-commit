@@ -1,0 +1,31 @@
+#!/usr/bin/env sh
+
+set -eu
+
+[ -n "${CRM_SKIP_HOOKS:-}" ] && exit 0
+
+staged=$(git diff --cached --name-only --diff-filter=ACMRD)
+
+[ -z "$staged" ] && exit 0
+
+source_changed=0
+log_changed=0
+
+while IFS= read -r file; do
+	case "$file" in
+	updates.md) log_changed=1 ;;
+	apps/* | packages/*) source_changed=1 ;;
+	esac
+done <<EOF
+$staged
+EOF
+
+[ "$source_changed" = "0" ] && exit 0
+[ "$log_changed" = "1" ] && exit 0
+
+echo ""
+echo "  This commit changes apps/ or packages/ and does not change updates.md."
+echo "  AGENTS.md makes the log mandatory. Add an entry to updates.md, stage it,"
+echo "  and commit again."
+echo ""
+exit 1

@@ -1,11 +1,65 @@
 # Strict rules — review before starting any work
 
+## Mandatory workflow — every agent, every session
+
+This applies to Claude, Codex, the Antigravity agent and every person. There
+are no exceptions and no "small change" exemption. Do the steps in this order.
+
+**Before you write code**
+
+1. Read `plan.md`. It is the one plan for this repository.
+2. Read `updates.md`. It is the log of what every agent changed. Read at least
+   the entries of the last two days.
+3. Run `graft check`. Run `graft build` when the map is stale.
+4. Tell the user that you read `plan.md` and `updates.md`, and name the plan
+   item you work on.
+
+**While you work**
+
+5. Do only work that `plan.md` lists. When the work is new, add it to `plan.md`
+   first. Then do it.
+6. Find code with graft: `graft ask "<task>"`, `graft skeleton <file>`,
+   `graft callers <symbol>`. Open only the span that you edit. Do not run
+   `graft build --deep` without approval, because it calls a paid model.
+7. Before you edit a file, look in `updates.md` for a recent entry by another
+   agent in the same area. Check the file's modification time. Do not overwrite
+   another agent's work. Tell the user about the conflict.
+8. Before you touch auth, secrets, user input, a route, a raw query or a
+   dependency, read `SECURITY.md`, section "Rules for agents that write code".
+
+**After each change, in the same turn**
+
+9. Add an entry to `updates.md`. Use the format at the top of that file. A
+   change without an entry is not complete.
+10. When a plan item changes state, change the status table in `plan.md`.
+11. Do not put a secret in `plan.md` or `updates.md`.
+
+`.githooks/pre-commit` refuses a commit that changes `apps/` or `packages/`
+without `updates.md`. The hook is the enforcement. The rules above apply also
+when you make no commit.
+
+**Don't** — start from the request, and report only in chat:
+
+> I read the landing components and rewrote the hero. Done.
+
+Nothing is in `updates.md`. The next agent does not know the hero changed, and
+it overwrites the work.
+
+**Do** — read first, then log:
+
+> I read `plan.md` and `updates.md`. I work on item 1, "Finish the checks for
+> Phase 5". Codex changed `hero.tsx` yesterday, so I edit only the buttons.
+> I added the entry "2026-10-06 01:10 IST — Claude — Hero buttons" to
+> `updates.md`.
+
 **Read the doc for the area you are touching before you touch it.** The table
 below is the whole index. These are plain paths, not imports: they are not in your
 context until you read them, and the rules in them are not optional.
 
 | Working on | Read first |
 | --- | --- |
+| **Anything at all** | `plan.md` and `updates.md` (see "Mandatory workflow") |
+| Auth, secrets, user input, a new route, a raw query, a dependency, a security audit | `SECURITY.md` |
 | Anything in `apps/api` — tRPC, auth, logging, sync, deletes, caching | `docs/api.md` |
 | `apps/agent` — the eve research agent, tools, tasks, dispatch | `docs/agent.md` |
 | `.env`, configuration, which variables exist and why | `docs/environment.md` |
@@ -15,6 +69,7 @@ context until you read them, and the rules in them are not optional.
 | `/settings/connections`, integrations, the intake endpoint | `docs/connections.md` |
 | The tracking script, the collector, form submissions | `docs/tracking.md` |
 | Running it locally, Google Cloud, DB commands, secrets | `docs/setup.md` |
+| A deploy, a cron, a scheduled route, `infra/clock`, a free-tier limit | `docs/hosting.md` |
 | Anything that sends a telemetry event, or a new property on one | `docs/telemetry.md` |
 | `.github/workflows`, versions, changelog, how a change reaches `release` | `CONTRIBUTING.md` |
 

@@ -152,8 +152,8 @@ export function NewAgentDialog({ children }: { children: React.ReactNode }) {
 						<p className="text-muted-foreground text-xs">
 							{channel
 								? channel.isMember
-									? `Comp AI is already in #${channel.name}.`
-									: `Comp AI is not in #${channel.name} yet. It joins when you create this.`
+									? `Tabla is already in #${channel.name}.`
+									: `Tabla is not in #${channel.name} yet. It joins when you create this.`
 								: "Leave this empty and the builder will ask."}
 						</p>
 					</div>
@@ -180,7 +180,7 @@ export function NewAgentDialog({ children }: { children: React.ReactNode }) {
 									>
 										{on ? (
 											<Icon
-												className="size-3.5 text-primary"
+												className="size-3.5 text-foreground"
 												icon={Checkmark}
 												motion="none"
 											/>

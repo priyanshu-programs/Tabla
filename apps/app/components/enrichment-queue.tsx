@@ -138,18 +138,20 @@ export function EnrichmentQueue() {
 							{footer.more} more queued
 						</span>
 						{footer.action === "show-all" ? (
-							<button
+							<Button
 								type="button"
-								className="cursor-pointer text-primary"
+								variant="link"
+								size="xs"
 								onClick={() => setExpanded(true)}
 							>
 								Show all
-							</button>
+							</Button>
 						) : null}
 						{footer.action === "load-more" ? (
-							<button
+							<Button
 								type="button"
-								className="cursor-pointer text-primary"
+								variant="link"
+								size="xs"
 								onClick={() =>
 									setLimit((current) =>
 										Math.min(current + ENRICHMENT_PAGE, ENRICHMENT_PAGE_MAX),
@@ -157,7 +159,7 @@ export function EnrichmentQueue() {
 								}
 							>
 								Load more
-							</button>
+							</Button>
 						) : null}
 					</div>
 				) : null}
@@ -287,7 +289,7 @@ function ScheduledSection({
 						? "1 record is booked for a later look"
 						: `${total} records are booked for a later look`}
 				</span>
-				<span className="text-primary">{shown ? "Hide" : "Show"}</span>
+				<span className="text-foreground">{shown ? "Hide" : "Show"}</span>
 			</CollapsibleTrigger>
 
 			<CollapsibleContent className="max-h-60 overflow-y-auto border-t">

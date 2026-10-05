@@ -70,7 +70,7 @@ if (env.microsoft) {
 }
 
 export const auth = betterAuth({
-	appName: "CRM",
+	appName: "Tabla",
 	baseURL: env.apiUrl,
 
 	database: prismaAdapter(db, {

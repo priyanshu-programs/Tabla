@@ -243,12 +243,12 @@ describe("the workspace profile session", () => {
 
 	it("sends the session to our own site, and holds it to a size", async () => {
 		const { markdown } = await workspacePreamble({
-			name: "Comp AI",
-			website: "trycomp.ai",
+			name: "Tabla",
+			website: "atlas.example",
 			profile: null,
 		});
 
-		expect(markdown).toContain("https://trycomp.ai");
+		expect(markdown).toContain("https://atlas.example");
 		expect(markdown).toContain("`write_workspace_profile`");
 		expect(markdown).toContain("320 characters");
 	});
@@ -262,8 +262,8 @@ describe("the workspace profile session", () => {
 
 	it("stops rather than sending the session at something unfetchable", async () => {
 		const { markdown } = await workspacePreamble({
-			name: "Comp AI",
-			website: "httpx://trycomp.ai",
+			name: "Tabla",
+			website: "httpx://atlas.example",
 			profile: null,
 		});
 

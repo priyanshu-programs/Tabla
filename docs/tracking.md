@@ -175,8 +175,8 @@ deleted* comes to be true of email and not of forms.
 
 ## Retention
 
-`POST /internal/tracking/retention`, nightly at 04:00 via `apps/api/vercel.json`,
-`CRON_SECRET` or nothing.
+`POST /internal/tracking/retention`, nightly at 04:00 UTC via the clock in
+`infra/clock` (see `docs/hosting.md`), `CRON_SECRET` or nothing.
 
 - **The cutoff is a whole UTC day**, `EVENT_RETENTION_DAYS` back and then truncated.
   A mid-day cutoff splits one calendar day across two nightly runs, and

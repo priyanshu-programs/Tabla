@@ -84,16 +84,6 @@ list fails closed.** Parsed on demand. `packages/auth/src/workspace.ts`.
   collides with any neighbour on a shared parent domain, silently: sign-in completes,
   the row is written, every reader resolves `null`. **Changing it signs everybody out.**
 
-## `IS_MARKETING` — landing page flag, off by default
-
-`"true"` serves `app/(landing)` at `/`; anything else sends a signed-out visitor to
-`/sign-in`, because the page markets *this* product.
-
-- **Only the literal `true`** (same shape as `PRISMA_LOG_QUERIES`).
-- **It decides one thing**: what a stranger at `/` sees.
-- **`isMarketing()` (`apps/app/lib/env.ts`) reads per request**, so a config change
-  needs no rebuild. Declared in `apps/app/turbo.json` `passThroughEnv`.
-
 ## Typed, validated env
 
 `apps/api/src/config/env.validation.ts` runs via `ConfigModule.forRoot({ validate })`,
@@ -171,37 +161,25 @@ everywhere.
 **Sync is forward-only** — Gmail records the current `historyId` on its first pass and
 imports nothing, Calendar reads from `now`, and Outlook records `now` as its cursor.
 
-**`CRON_SECRET`** (min 16 chars) guards `POST /internal/sync/mailboxes` and
-`/internal/sync/rates`; both **fail closed when unset**. `/internal/sync/google` is
-kept as an alias of the first, so an existing deployment's cron does not break on
-deploy. **Crons live in `apps/api/vercel.json`** — mailboxes `*/5 * * * *`, rates
-daily. Minute-level schedules need a Pro plan; on Hobby it silently becomes daily.
+**`CRON_SECRET`** (min 16 chars) guards `POST /internal/sync/mailboxes`,
+`/internal/sync/rates`, `/internal/tracking/retention`, `/internal/archive/prune` and
+`/internal/agent/tick`; all **fail closed when unset**. `/internal/sync/google` is
+kept as an alias of the first.
+
+**No cron lives in `apps/api/vercel.json`, and none may be added.** Vercel Hobby
+rejects a deploy that holds a cron more frequent than daily. The clock is the
+Cloudflare Worker in `infra/clock`: mailboxes and the agent tick every 30 minutes,
+the three clean-up routes daily. It holds `CRON_SECRET` and nothing else.
+`docs/hosting.md` has the whole account.
+
+**`API_REGION`** is read once, at build time, by `apps/api/scripts/build-func.mjs`.
+It names the Vercel region of the API function and defaults to `iad1`. Set it to the
+region of the database.
 
 Deliberate absences: **no `GOOGLE_SYNC_ENABLED`** (a switch that can disable a mandatory
 feature is only ever wrong), **no `GOOGLE_WORKSPACE_DOMAIN`** (`ALLOWED_SIGN_IN` already
 says who is internal — two sources is how a colleague becomes a lead), **no
 `GMAIL_BACKFILL_DAYS`**, **no `OUTLOOK_BACKFILL_DAYS`**, **no rate provider variable**.
-
-## Telemetry is on, and turning it off is one variable
-
-`CRM_TELEMETRY_DISABLED="1"` — or `DO_NOT_TRACK=1`, honoured identically — and nothing
-is sent. No client is constructed, so there is no queue waiting to flush later.
-
-- **Server side only**, `posthog-node` in the API and the agent. **`posthog-js`
-  appears once, on the `trycrm.ai` landing page**, and nowhere a record can be
-  reached: autocapture on a CRM would lift contact names and deal amounts out of
-  somebody else's database. That one import is gated on
-  `window.location.hostname`, not on `IS_MARKETING` — turning the landing page on
-  for your own domain never loads it. `docs/telemetry.md`.
-- **There is no variable for the destination.** The project key and host are
-  constants in `packages/telemetry/src/project.ts`. A `phc_` key is write-only —
-  it can send events and read nothing back — so making it configurable would
-  only imply it were a secret. Edit the constants to point somewhere else.
-- **The install ID is a row, not a file** — `install`, one row, UUID written by
-  the migration. Vercel's filesystem is ephemeral, so `~/.crm/telemetry-id`
-  would count containers.
-- Declared in `env.validation.ts` as optional, like everything else here. Every
-  event and the never-sent list are in **`docs/telemetry.md`**.
 
 ## Not env vars
 

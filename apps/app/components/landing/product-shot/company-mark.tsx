@@ -1,12 +1,9 @@
-import Logo from "@crm/ui/components/logo";
 import { cn } from "@crm/ui/lib/utils";
 import Image from "next/image";
 import type { MockCompany } from "./companies";
 
 /**
- * The square a company is drawn in inside the mock. Our own record renders the
- * product mark on a light chip; everyone else renders the artwork the agent
- * mirrored for them.
+ * The square a company is drawn in inside the mock.
  */
 export function CompanyMark({
 	company,
@@ -20,13 +17,10 @@ export function CompanyMark({
 	if (!company.logo) {
 		return (
 			<span
-				className="flex shrink-0 items-center justify-center bg-foreground"
+				className="flex shrink-0 items-center justify-center rounded-md bg-muted font-semibold text-foreground"
 				style={{ width: size, height: size }}
 			>
-				<Logo
-					className="shrink-0 text-background"
-					style={{ width: glyph, height: glyph }}
-				/>
+				<span style={{ fontSize: glyph }}>{company.name.slice(0, 1)}</span>
 			</span>
 		);
 	}

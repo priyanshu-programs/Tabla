@@ -1,30 +1,33 @@
 import type { Metadata } from "next";
-import { AgentSection } from "@/components/landing/agent-section";
-import { LandingAnalytics } from "@/components/landing/analytics";
-import { CapabilitiesSection } from "@/components/landing/capabilities-section";
 import { ClosingCta } from "@/components/landing/closing-cta";
 import { Hero } from "@/components/landing/hero";
+import { HowItWorks } from "@/components/landing/how-it-works/how-it-works";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { LandingNav } from "@/components/landing/landing-nav";
 import { ProductShot } from "@/components/landing/product-shot/product-shot";
+import { SignalTicker } from "@/components/landing/signal-ticker";
+import { Stats } from "@/components/landing/stats";
 
 export const metadata: Metadata = {
-	title: "The CRM for agents",
-	description:
-		"The first agentic CRM experience — durable research agents that read your inbox, keep every record current and book their own follow-ups.",
+	title: "Tabla",
+	description: "Tabla is the AI-native CRM that keeps customer work moving.",
 };
 
 export default function Home() {
 	return (
-		<div className="dark flex min-h-svh w-full flex-col items-center overflow-clip bg-background font-sans text-foreground">
+		<div className="flex min-h-svh w-full flex-col items-center overflow-clip bg-background text-foreground">
 			<LandingNav />
-			<Hero />
-			<ProductShot />
-			<AgentSection />
-			<CapabilitiesSection />
-			<ClosingCta />
+			<main className="w-full">
+				<Hero />
+				<SignalTicker />
+				<div id="product-preview" className="scroll-mt-8">
+					<ProductShot />
+				</div>
+				<HowItWorks />
+				<Stats />
+				<ClosingCta />
+			</main>
 			<LandingFooter />
-			<LandingAnalytics />
 		</div>
 	);
 }
