@@ -35,16 +35,16 @@ goal:
 | Phase | What | State |
 | --- | --- | --- |
 | 0 | Branch `feat/context-engine` | Done |
-| 1 | Brand data from the company site. Key page removed | Done. Commit `96bf086`, local only |
-| 2 | Site reading for briefs and team photos | Built and tested. **Not committed** |
+| 1 | Brand data from the company site. Key page removed | Done. Commit `96bf086` |
+| 2 | Site reading for briefs and team photos | Done. Commit `b51167e` |
 | 3 | People data: LinkedIn preview, search, Gravatar | Not started |
 | 4 | Remove the Context.dev package, key column and old docs | Not started |
-| 5 | Rename to Tabla: theme, logo, landing, sign-in, telemetry removal | Code done and repaired. **Not fully verified. Not committed** |
-| 5a | Larger landing page: motion, stats, ticker, "how it works" | In progress by the Antigravity agent. Not reviewed |
+| 5 | Rename to Tabla: theme, logo, landing, sign-in, telemetry removal | Done. Commit `be68f5e` |
+| 5a | Larger landing page: motion, stats, ticker, "how it works" | Committed in `be68f5e`. Not deployed. |
 | 6 | Push to the `tabla` remote | Not started |
 | 7 | Tabla's own interface, built new | Logged. Not planned |
-| 8 | Hosting on free tiers: Vercel Hobby, Neon, Cloudflare clock | Code built and tested. **Not deployed. Not committed** |
-| W | Mandatory workflow: `plan.md`, `updates.md`, graft, security rules | Done. Not committed |
+| 8 | Hosting on free tiers: Vercel Hobby, Neon, Cloudflare clock | Code committed in `be68f5e`. Not deployed. |
+| W | Mandatory workflow: `plan.md`, `updates.md`, graft, security rules | Done. Committed in `be68f5e` |
 | S | Full security audit | Not started. Procedure is in `SECURITY.md` |
 
 ## Open work, in order
