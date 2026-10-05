@@ -1,5 +1,6 @@
 import {
 	isBlockedAddress,
+	readText,
 	resolvesToPublicHost,
 	safeFetch,
 } from "./safe-fetch";
@@ -13,7 +14,7 @@ const MAX_ICON_CANDIDATES = 10;
 
 const ICON_REL = /^(shortcut )?icon$|^apple-touch-icon(-precomposed)?$/i;
 
-function iconsFromHtml(html: string, base: URL): string[] {
+export function iconsFromHtml(html: string, base: URL): string[] {
 	const found: { href: string; size: number }[] = [];
 
 	for (const [tag] of html.matchAll(/<link\b[^>]*>/gi)) {
@@ -45,30 +46,14 @@ async function readPage(url: URL): Promise<{ body: string; url: URL } | null> {
 		await response.body?.cancel();
 		return null;
 	}
-	if (!response.body) return null;
 
-	const reader = response.body.getReader();
-	const decoder = new TextDecoder();
-	let body = "";
-	let bytes = 0;
-
-	try {
-		while (bytes < MAX_HTML_BYTES) {
-			const { done, value } = await reader.read();
-			if (done) break;
-			bytes += value.byteLength;
-			body += decoder.decode(value, { stream: true });
-		}
-	} catch {
-		return null;
-	} finally {
-		await reader.cancel().catch(() => {});
-	}
+	const body = await readText(response, MAX_HTML_BYTES);
+	if (body === null) return null;
 
 	return { body, url: result.url };
 }
 
-async function servesImage(url: string): Promise<boolean> {
+export async function servesImage(url: string): Promise<boolean> {
 	const result = await safeFetch(url, {
 		method: "HEAD",
 		timeoutMs: TIMEOUT_MS,

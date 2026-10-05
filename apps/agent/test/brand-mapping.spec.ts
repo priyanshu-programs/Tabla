@@ -1,10 +1,10 @@
 import { describe, expect, it } from "bun:test";
+import type { SiteBrand as Brand } from "@crm/validation/site-brand";
 import {
 	brandToUpdate,
 	type CompanySnapshot,
 	stillFillable,
 } from "../agent/lib/brand-mapping";
-import type { Brand } from "../agent/lib/context-dev";
 
 function emptyCompany(
 	overrides: Partial<CompanySnapshot> = {},

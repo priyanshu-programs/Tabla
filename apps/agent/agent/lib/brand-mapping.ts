@@ -1,5 +1,5 @@
 import type { Prisma } from "@crm/db";
-import type { Brand } from "./context-dev";
+import type { SiteBrand as Brand } from "@crm/validation/site-brand";
 
 export type BrandUpdate = Prisma.CompanyUpdateInput;
 

@@ -1,22 +1,10 @@
-import { afterAll, afterEach, beforeAll, describe, expect, it } from "bun:test";
+import { afterEach, describe, expect, it } from "bun:test";
 import { db, EnrichmentStatus } from "@crm/db";
-import { readContextDevKey, writeContextDevKey } from "@crm/db/settings";
 import { runBrand } from "../agent/lib/brand";
 import { settle } from "../agent/lib/enrichment";
 
-/**
- * An install with no Context key still creates companies, and a `brand` task
- * with nowhere to look is consumed and marked done. What must survive that is
- * the *record*: the sign-in sweep re-queues companies whose enrichment never
- * succeeded, and it decides that on `enrichmentStatus` being PENDING or FAILED.
- *
- * `runBrand` settles SKIPPED before anything marks the row RUNNING, and
- * `settle` only writes over a RUNNING row — so the row stays PENDING and the
- * sweep picks it up once a key exists. That is load bearing and entirely
- * implicit, which is why it is pinned here: a `settle` that wrote
- * unconditionally would strand every company added before the key, with
- * nothing to say so.
- */
+const DNS_TEST_TIMEOUT_MS = 20_000;
+
 const created: string[] = [];
 const tasks: string[] = [];
 
@@ -31,8 +19,8 @@ afterEach(async () => {
 async function company(status: EnrichmentStatus) {
 	const row = await db.company.create({
 		data: {
-			name: "Keyless Probe",
-			domain: `keyless-${created.length}-${status}.test`.toLowerCase(),
+			name: "Settle Probe",
+			domain: `settle-${created.length}-${status}.test`.toLowerCase(),
 			enrichmentStatus: status,
 		},
 		select: { id: true },
@@ -43,7 +31,7 @@ async function company(status: EnrichmentStatus) {
 }
 
 const subjectOf = (companyId: string) => ({
-	id: `keyless-${companyId}`,
+	id: `settle-${companyId}`,
 	kind: "brand",
 	contactId: null,
 	companyId,
@@ -61,7 +49,7 @@ async function retiredSubjectOf(companyId: string) {
 		data: {
 			companyId,
 			kind: "brand",
-			reason: "keyless",
+			reason: "settle",
 			attempts: 3,
 			dueAt: new Date(),
 			finishedAt: new Date(),
@@ -81,15 +69,11 @@ const statusOf = async (id: string) =>
 		})
 	)?.enrichmentStatus;
 
-describe("a brand task with no key", () => {
-	it("leaves the company where the sweep will find it again", async () => {
+describe("settling a brand task", () => {
+	it("leaves a company that never started where the sweep will find it again", async () => {
 		const id = await company(EnrichmentStatus.PENDING);
 
-		await settle(
-			subjectOf(id),
-			EnrichmentStatus.SKIPPED,
-			"Context.dev is not configured, so there is nowhere to look.",
-		);
+		await settle(subjectOf(id), EnrichmentStatus.SKIPPED, "Nothing ran.");
 
 		expect(await statusOf(id)).toBe(EnrichmentStatus.PENDING);
 	});
@@ -97,7 +81,7 @@ describe("a brand task with no key", () => {
 	it("does not strand a company that had already failed", async () => {
 		const id = await company(EnrichmentStatus.FAILED);
 
-		await settle(subjectOf(id), EnrichmentStatus.SKIPPED, "no key");
+		await settle(subjectOf(id), EnrichmentStatus.SKIPPED, "Nothing ran.");
 
 		expect(await statusOf(id)).toBe(EnrichmentStatus.FAILED);
 	});
@@ -138,7 +122,7 @@ describe("a brand task with no key", () => {
 async function domainlessCompany(status: EnrichmentStatus) {
 	const row = await db.company.create({
 		data: {
-			name: `Keyless Probe ${created.length}`,
+			name: `Settle Probe ${created.length}`,
 			enrichmentStatus: status,
 		},
 		select: { id: true },
@@ -148,19 +132,8 @@ async function domainlessCompany(status: EnrichmentStatus) {
 	return row.id;
 }
 
-describe("a brand task on a company with no domain", () => {
-	let key: string | null;
-
-	beforeAll(async () => {
-		key = await readContextDevKey(db);
-	});
-
-	afterAll(async () => {
-		await writeContextDevKey(db, key ?? "");
-	});
-
-	it("marks the company skipped, because no sweep will find it again", async () => {
-		await writeContextDevKey(db, "ctx-test-key");
+describe("a brand task on an install with no research key", () => {
+	it("marks a company with no domain skipped, because no sweep will find it again", async () => {
 		const id = await domainlessCompany(EnrichmentStatus.PENDING);
 
 		const result = await runBrand({ companyId: id });
@@ -169,13 +142,17 @@ describe("a brand task on a company with no domain", () => {
 		expect(await statusOf(id)).toBe(EnrichmentStatus.SKIPPED);
 	});
 
-	it("still leaves a keyless install's company pending for the sweep", async () => {
-		await writeContextDevKey(db, "");
-		const id = await domainlessCompany(EnrichmentStatus.PENDING);
+	it(
+		"runs the lookup and settles a domain that has no site",
+		async () => {
+			const id = await company(EnrichmentStatus.PENDING);
 
-		const result = await runBrand({ companyId: id });
+			const result = await runBrand({ companyId: id });
 
-		expect(result.enriched).toBe(false);
-		expect(await statusOf(id)).toBe(EnrichmentStatus.PENDING);
-	});
+			expect(result.enriched).toBe(false);
+			expect(result.reason).toContain("No site answers");
+			expect(await statusOf(id)).toBe(EnrichmentStatus.SKIPPED);
+		},
+		DNS_TEST_TIMEOUT_MS,
+	);
 });

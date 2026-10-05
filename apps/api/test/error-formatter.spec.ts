@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { z } from "zod";
-import { setResearchKeyInput } from "../src/settings/settings.contracts";
+import { setArchiveRetentionDaysInput } from "../src/settings/settings.contracts";
 import { readableInputError } from "../src/trpc/error-formatter";
 
 const causeOf = (schema: z.ZodType, value: z.core.util.JSONType) => {
@@ -11,15 +11,15 @@ const causeOf = (schema: z.ZodType, value: z.core.util.JSONType) => {
 
 describe("what a rejected form says", () => {
 	it("shows the sentence, not the ZodError", () => {
-		const cause = causeOf(setResearchKeyInput, { apiKey: "short" });
+		const cause = causeOf(setArchiveRetentionDaysInput, { days: 0 });
 
 		expect(readableInputError("ignored", cause)).toBe(
-			"That does not look like a Context API key — it is too short.",
+			"Retention has to be at least 1 day.",
 		);
 	});
 
 	it("never leaks the machinery a reader cannot act on", () => {
-		const cause = causeOf(setResearchKeyInput, { apiKey: "short" });
+		const cause = causeOf(setArchiveRetentionDaysInput, { days: 0 });
 		const shown = readableInputError("ignored", cause) ?? "";
 
 		for (const noise of [

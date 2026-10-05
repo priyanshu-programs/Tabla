@@ -1,0 +1,28 @@
+{
+	"name": "@crm/context",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"exports": {
+		"./brand": "./src/brand.ts",
+		"./config": "./src/config.ts",
+		"./html": "./src/html.ts",
+		"./page": "./src/page.ts"
+	},
+	"scripts": {
+		"check-types": "tsc --noEmit",
+		"lint": "biome check .",
+		"test": "bun test",
+		"clean": "rm -rf .turbo node_modules"
+	},
+	"dependencies": {
+		"@crm/db": "workspace:*",
+		"@crm/validation": "workspace:*",
+		"node-html-parser": "^9.0.4"
+	},
+	"devDependencies": {
+		"@crm/typescript-config": "workspace:*",
+		"@types/node": "^24.10.1",
+		"typescript": "5.9.2"
+	}
+}

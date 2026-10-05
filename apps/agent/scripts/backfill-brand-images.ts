@@ -1,6 +1,7 @@
 import { db } from "@crm/db";
 import { blobEnabled, isMirrored, mirror } from "@crm/db/blob";
 import { COMPANY_IMAGE_FIELDS, type CompanyImageField } from "@crm/db/images";
+import { parseStoredBrand } from "@crm/validation/site-brand";
 import { z } from "zod";
 import { brandToUpdate } from "../agent/lib/brand-mapping";
 
@@ -53,10 +54,10 @@ let updated = 0;
 let copied = 0;
 
 for (const row of rows) {
-	const brand = (row.raw as { brand?: unknown } | null)?.brand;
+	const brand = parseStoredBrand(row.raw);
 	if (!brand) continue;
 
-	const update = brandToUpdate(brand as never, {
+	const update = brandToUpdate(brand, {
 		...row.company,
 		nameIsPlaceholder: false,
 	});

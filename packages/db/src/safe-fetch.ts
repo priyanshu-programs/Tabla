@@ -115,6 +115,33 @@ export async function resolvesToPublicHost(
 	}
 }
 
+export async function readText(
+	response: Response,
+	maxBytes: number,
+): Promise<string | null> {
+	if (!response.body) return null;
+
+	const reader = response.body.getReader();
+	const decoder = new TextDecoder();
+	let body = "";
+	let bytes = 0;
+
+	try {
+		while (bytes < maxBytes) {
+			const { done, value } = await reader.read();
+			if (done) break;
+			bytes += value.byteLength;
+			body += decoder.decode(value, { stream: true });
+		}
+	} catch {
+		return null;
+	} finally {
+		await reader.cancel().catch(() => {});
+	}
+
+	return body;
+}
+
 export async function safeFetch(
 	url: string,
 	{

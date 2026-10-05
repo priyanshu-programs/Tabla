@@ -1,8 +1,11 @@
+import { brandFromSite } from "@crm/context/brand";
 import { db, EnrichmentStatus } from "@crm/db";
 import { mirrorBrandImages } from "./brand-images";
 import { brandToUpdate, filledFields, stillFillable } from "./brand-mapping";
-import { brandByDomain, contextDevEnabled } from "./context-dev";
+import { CONTEXT } from "./context-config";
 import { UNLESS_COMPLETE } from "./enrichment";
+
+const SOURCE = "site";
 
 export type BrandResult = {
 	enriched: boolean;
@@ -44,11 +47,9 @@ const COMPANY_FIELDS = {
 
 export async function runBrand({
 	companyId,
-	fresh = false,
 	spend = FREE,
 }: {
 	companyId: string;
-	fresh?: boolean;
 	spend?: Spend;
 }): Promise<BrandResult> {
 	const company = await db.company.findUnique({
@@ -57,13 +58,6 @@ export async function runBrand({
 	});
 
 	if (!company) return { enriched: false, reason: "No such company." };
-
-	if (!(await contextDevEnabled())) {
-		const reason =
-			"Context.dev is not configured, so there is nowhere to look.";
-		await settle(companyId, EnrichmentStatus.SKIPPED, reason);
-		return { enriched: false, reason };
-	}
 
 	if (!company.domain) {
 		await settle(
@@ -75,7 +69,7 @@ export async function runBrand({
 		return { enriched: false, reason: "No domain on this company." };
 	}
 
-	const charge = spend(2);
+	const charge = spend(CONTEXT.cost.brand);
 	if (!charge.ok) return { enriched: false, reason: charge.reason };
 
 	await db.company.updateMany({
@@ -86,7 +80,7 @@ export async function runBrand({
 		},
 	});
 
-	const result = await brandByDomain(company.domain, fresh ? 0 : undefined);
+	const result = await brandFromSite(company.domain);
 
 	if (result.outcome === "skipped") {
 		await settle(companyId, EnrichmentStatus.SKIPPED, result.reason);
@@ -126,10 +120,12 @@ export async function runBrand({
 			},
 		});
 
+		const raw = { brand: result.brand, sourceUrl: result.sourceUrl };
+
 		await tx.companyEnrichment.upsert({
 			where: { companyId },
-			create: { companyId, raw: result.raw as object },
-			update: { raw: result.raw as object, fetchedAt: new Date() },
+			create: { companyId, source: SOURCE, raw },
+			update: { source: SOURCE, raw, fetchedAt: new Date() },
 		});
 
 		return filledFields(data);
@@ -157,7 +153,7 @@ export function brandOutcome(result: BrandResult): string {
 	const mirrored = result.mirrored ?? [];
 
 	if (filled.length === 0) {
-		return "Everything Context.dev returned was already on the record.";
+		return "Everything the company site shows was already on the record.";
 	}
 
 	return `Filled ${filled.join(", ")}.${mirrored.length > 0 ? ` Copied ${mirrored.length} image(s) in-house.` : ""}`;
