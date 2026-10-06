@@ -126,8 +126,18 @@ export class EnvironmentVariables {
 
 export type RawEnvironment = Record<string, string | undefined>;
 
+function trimValues(config: RawEnvironment): RawEnvironment {
+	const trimmed: RawEnvironment = {};
+
+	for (const [key, value] of Object.entries(config)) {
+		trimmed[key] = value?.trim();
+	}
+
+	return trimmed;
+}
+
 export function validateEnv(config: RawEnvironment): EnvironmentVariables {
-	const validated = plainToInstance(EnvironmentVariables, config, {
+	const validated = plainToInstance(EnvironmentVariables, trimValues(config), {
 		enableImplicitConversion: true,
 		exposeDefaultValues: true,
 	});

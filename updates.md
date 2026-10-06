@@ -24,6 +24,31 @@ The log of every change to this repository. `AGENTS.md` makes it mandatory.
 
 ---
 
+## 2026-10-06 16:20 IST — Claude — Every environment value is trimmed before it is read
+- Changed: `packages/auth/src/env.ts`, `apps/api/src/config/env.validation.ts`,
+  `packages/auth/test/sso.spec.ts`.
+- Why: sign-in on the deployed app returns `?error=invalid_code`. Better Auth
+  raises that code in `callback.mjs` lines 66-78 when the token exchange with
+  Google throws. The state matched and the provider is configured, so Google
+  refused the exchange. The leading suspect is a padded `GOOGLE_CLIENT_SECRET`
+  on `tabla-api`: nothing here trimmed an environment value, so a secret pasted
+  into the Vercel dashboard with a trailing space reached Google and failed with
+  `invalid_client`. Locally this cannot happen, because dotenv trims. That is the
+  shape of "works local, fails deployed".
+- Fix: `optional()` trims and reads a whitespace-only value as unset. One change
+  covers both Google values, the Microsoft and Slack pairs, `API_URL`,
+  `AUTH_COOKIE_DOMAIN` and `MICROSOFT_TENANT_ID`. `validateEnv` trims the whole
+  config before `plainToInstance`, so a padded value cannot reach `ConfigService`.
+- Tests: the padding cases live in `sso.spec.ts`, not in a file of their own. Bun
+  shares one module registry across test files in a package. A second file that
+  imports `../src/env` evaluates it first and the real owner reads the wrong
+  values. `sso.spec.ts` already configures that module, so the cases belong there.
+- Checked: `check-types` 13/13, `lint:slop` exit 0, `test` 10/10 tasks.
+- Not done: this is a hypothesis, not a confirmed cause. The Vercel connector
+  returns 403 on this scope for logs and for variables, so nobody read the real
+  error from Google. The owner reads `tabla-api` → Logs and re-pastes
+  `GOOGLE_CLIENT_SECRET`. Sign-in on the deployed app still fails.
+
 ## 2026-10-06 15:50 IST — Claude — Commit of five fixes that earlier sessions left uncommitted
 - Changed: nothing new. This commits work other sessions did and did not commit.
 - Files: `apps/app/turbo.json` (the `API_URL` build fix from the 13:36 entry),

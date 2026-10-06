@@ -5,7 +5,7 @@ const DEFAULT_APP_URL = "http://localhost:3000";
 const DEFAULT_MICROSOFT_TENANT = "common";
 
 const optional = (key: string): string | undefined => {
-	const value = process.env[key];
+	const value = process.env[key]?.trim();
 	return value && value.length > 0 ? value : undefined;
 };
 
