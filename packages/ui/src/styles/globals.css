@@ -468,6 +468,7 @@
 	.animate-landing-flip-a,
 	.animate-landing-flip-b,
 	.animate-landing-caret {
+		/* biome-ignore lint/complexity/noImportantStyles: required to override animation libraries in reduced-motion context */
 		animation: none !important;
 	}
 }
@@ -979,7 +980,9 @@
 	.link-hover *,
 	.link-hover::before,
 	.link-hover::after {
+		/* biome-ignore lint/complexity/noImportantStyles: required to override animation libraries in reduced-motion context */
 		animation: none !important;
+		/* biome-ignore lint/complexity/noImportantStyles: required to override animation libraries in reduced-motion context */
 		transition-duration: 0.01ms !important;
 	}
 }

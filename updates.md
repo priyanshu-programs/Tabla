@@ -24,6 +24,22 @@ The log of every change to this repository. `AGENTS.md` makes it mandatory.
 
 ---
 
+## 2026-10-06 15:50 IST — Claude — Commit of five fixes that earlier sessions left uncommitted
+- Changed: nothing new. This commits work other sessions did and did not commit.
+- Files: `apps/app/turbo.json` (the `API_URL` build fix from the 13:36 entry),
+  `apps/agent/test/brand-settle.integration.spec.ts` (`NOW() AT TIME ZONE 'UTC'`,
+  plan item 0.1), `apps/agent/test/workspace.spec.ts` (a format fix),
+  `packages/ui/src/styles/globals.css` (three `biome-ignore` lines for
+  `noImportantStyles` in the reduced-motion blocks).
+- Why: the working tree held 1413 changed files. Only these five differ in
+  content. A fresh clone built the app without `API_URL`, so sign-in returned 502.
+- Line endings: the other 1408 files differ only in CRLF, which the uncommitted
+  `lineEnding: "crlf"` in `biome.jsonc` produced. The owner chose to leave them
+  alone. `biome.jsonc` stays uncommitted, so the committed tree stays LF and CI
+  lints it with Biome's default. Do not `git add` the whole tree.
+- Checked: `check-types`, `lint`, `lint:slop` and `test` all pass at push.
+- Not done: the 1408 line-ending files still show as changed in the editor.
+
 ## 2026-10-06 15:30 IST — Claude — Commit and push of the auth base URL fix
 - Changed: `plan.md`. Corrects the entry below, which says "Not committed".
 - Commit `b1cb833`. Pushed to `tabla` on `feat/context-engine`. All four pre-push

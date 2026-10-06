@@ -166,8 +166,8 @@ The whole plan, the limits and the setup steps are in `docs/hosting.md`.
    A package task `env` replaces the root list, so `next build` never saw the
    variable and `next.config.ts` inlined `http://localhost:3001`. Sign-in returned
    502 on the live app. The task now declares `API_URL` and `APP_URL`. Done on
-   2026-10-06. Not committed. Left: redeploy `tabla-app` and confirm
-   `/api/auth/ok` returns 200 through the proxy.
+   2026-10-06. Committed on 2026-10-06. `/api/auth/ok` returns 200 on
+   `tabla-app-seven.vercel.app` through the proxy, so the redeploy is confirmed.
 4b. The OAuth callback landed on the api host, so the session cookie never
    reached the app and sign-in returned to `/sign-in`. `packages/auth` now builds
    `baseURL`, the Slack redirect and the SSO callback from `env.authBaseUrl`,
