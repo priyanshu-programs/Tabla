@@ -41,13 +41,29 @@ goal:
 | 4 | Remove the Context.dev package, key column and old docs | Not started |
 | 5 | Rename to Tabla: theme, logo, landing, sign-in, telemetry removal | Done. Commit `be68f5e` |
 | 5a | Larger landing page: motion, stats, ticker, "how it works" | Committed in `be68f5e`. Not deployed. |
-| 6 | Push to the `tabla` remote | Not started |
+| 6 | Push to the `tabla` remote | Done. `f9d5d0b` on `feat/context-engine` |
 | 7 | Tabla's own interface, built new | Logged. Not planned |
-| 8 | Hosting on free tiers: Vercel Hobby, Neon, Cloudflare clock | Code committed in `be68f5e`. Not deployed. |
+| 8 | Hosting on free tiers: Vercel Hobby, Neon, Cloudflare clock | Code committed in `be68f5e`. The first `tabla-app` build failed. The install fix is done, not committed. Not deployed. |
 | W | Mandatory workflow: `plan.md`, `updates.md`, graft, security rules | Done. Committed in `be68f5e` |
 | S | Full security audit | Not started. Procedure is in `SECURITY.md` |
 
 ## Open work, in order
+
+### 0. Raw SQL `NOW()` writes the wrong instant on a database that is not UTC
+
+Every timestamp column is `TIMESTAMP(3)`, with no time zone. All 159 of them.
+Prisma writes a UTC instant into such a column. Raw SQL `NOW()` writes the
+session wall clock instead. On a database that is not UTC the two disagree by
+the offset of the zone.
+
+1. `apps/agent/test/brand-settle.integration.spec.ts`, line 44: use
+   `(NOW() AT TIME ZONE 'UTC')`. The test fails on an IST database without it.
+   Done.
+2. `apps/agent/agent/lib/slack-people.ts`, lines 196, 210 and 211: the same
+   `NOW()` pattern runs in production. A self-hoster on a database that is not
+   UTC gets a wrong `updatedAt`, `createdAt` and `classifiedAt`. Not done.
+3. Decide one rule for the whole repository. Either move the columns to
+   `TIMESTAMPTZ`, or forbid `NOW()` in raw SQL and add a lint rule. Not done.
 
 ### 1. Finish the checks for Phase 5
 
@@ -129,10 +145,18 @@ The whole plan, the limits and the setup steps are in `docs/hosting.md`.
    clock in `infra/clock`, and the removal of every cron that Vercel Hobby
    rejects. Done on 2026-10-06. Left: build the agent with `VERCEL=1` and
    confirm that `.vercel/output/config.json` holds only the daily cron.
-2. Deploy, after item 7. Create `tabla-api`, `tabla-app` and `tabla-agent` on
-   Vercel. Set the variables. Deploy the clock to Cloudflare.
-3. Pick a free model on the Tabla settings page.
-4. After one week, read the Neon, Vercel and Workflow usage pages.
+2. `bun install` fails on Vercel without `DATABASE_URL`. The `postinstall` of
+   `@crm/db` runs `prisma generate`, and `prisma.config.ts` resolved the
+   datasource with prisma's `env()` helper, which throws at module load.
+   `prisma.config.ts` now sets the datasource only when the variable exists.
+   `docs/hosting.md` now says the app needs `DATABASE_URL` and the api's
+   `BETTER_AUTH_SECRET`, because `apps/app/lib/session.ts` reads the database.
+   Done on 2026-10-06. Not committed.
+3. Deploy, after item 7. Create `tabla-api`, `tabla-app` and `tabla-agent` on
+   Vercel. Set the variables. Deploy the clock to Cloudflare. Today only
+   `tabla-app` exists, and it holds no variable at all.
+4. Pick a free model on the Tabla settings page.
+5. After one week, read the Neon, Vercel and Workflow usage pages.
 
 ## Decisions that wait for the owner
 

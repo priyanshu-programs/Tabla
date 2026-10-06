@@ -24,6 +24,111 @@ The log of every change to this repository. `AGENTS.md` makes it mandatory.
 
 ---
 
+## 2026-10-06 12:05 IST — Claude — Prisma config no longer needs DATABASE_URL to generate
+- Changed: `packages/db/prisma.config.ts`, `docs/hosting.md`, `plan.md`.
+- Why: The first `tabla-app` build on Vercel failed in `bun install`. The
+  `postinstall` of `@crm/db` runs `prisma generate`. `prisma.config.ts` resolved the
+  datasource with prisma's `env()` helper, which reads `process.env` at module load
+  and throws. `prisma generate` needs no database, so the whole install failed for
+  nothing.
+- Changed how: `prisma.config.ts` reads `process.env.DATABASE_URL` and sets
+  `datasource` only when the value exists. The `env` import is gone.
+- Also: `docs/hosting.md` said the app needs no `DATABASE_URL`. That is wrong.
+  `apps/app/lib/session.ts` imports the Prisma client and calls
+  `auth.api.getSession`, so the app needs the database and the api's
+  `BETTER_AUTH_SECRET`. The variable table and a new paragraph say so.
+- Checked:
+  - `prisma generate` with no `DATABASE_URL` and no `.env` in scope: exit 0,
+    `datasource` is `undefined`.
+  - `prisma migrate status` in the same conditions: exit 1, and prisma prints
+    "The datasource.url property is required in your Prisma config file when using
+    prisma migrate status". The message names the command, so no guard is needed.
+  - `bunx biome check packages/db/prisma.config.ts`: no fix.
+  - `bun run check-types`: 13 tasks, all pass.
+  - `bun run build`: 4 tasks, all pass.
+  - Vercel API: the project `tabla-app` holds zero environment variables.
+- Not done: the owner sets the variables on `tabla-app`, confirms the root
+  directory is `apps/app`, and creates `tabla-api` and `tabla-agent`. No commit.
+
+## 2026-10-06 11:13 IST — Claude — Hosting decision: why Vercel and Cloudflare
+- Changed: `updates.md` only. No code.
+- Why: The owner asked why Vercel hosts Tabla and not Cloudflare. The reasons were
+  not written in one place.
+- Checked: `docs/hosting.md` rows for the apps, the clock, and the "Hosts that do
+  not fit" table. Read-only.
+- Decision: Vercel Hobby hosts `apps/app`, `apps/api` and `apps/agent`. Reasons:
+  - eve builds for Vercel or a Node server. Cloudflare Workers run another
+    runtime, so the apps do not run there.
+  - The agent's sandbox and workflow state need an operating system. Vercel
+    Sandbox and Workflow provide both on the free tier.
+  - AI Gateway works through OIDC on Vercel, so no provider key is needed there.
+  - Other free hosts failed: Render sleeps and loses disk, Supabase pauses after
+    7 idle days, Fly, Railway, Koyeb and Cloud Run need a card, and Cloudflare R2
+    asks for a payment method.
+- Decision: Cloudflare runs only the clock, `infra/clock`. Vercel Hobby rejects a
+  cron more frequent than daily, and the agent needs a 30-minute tick. The tick
+  uses about 33 of Neon's 100 free compute-hours a month.
+- Not done: Vercel Hobby is for personal, non-commercial use. A company needs
+  Vercel Pro or a Node host before business use. Free AI models are rate-limited
+  and chosen by Vercel. The clock is not deployed.
+
+---
+
+## 2026-10-06 10:55 IST — Claude — Phase 6: pushed the branch to the tabla remote
+- Changed: `apps/agent/test/brand-settle.integration.spec.ts`, `plan.md`,
+  `updates.md`. Formatting only, by Biome, on
+  `packages/validation/src/web-manifest.ts`,
+  `packages/context/tsconfig.json` and
+  `apps/agent/agent/lib/slack-join-task.ts`.
+- Why: Phase 6 sends the work to `github.com/priyanshu-programs/Tabla`. Five
+  separate faults blocked the push. Each one is below.
+- Checked: `bun run check-types` 13/13 pass. `bun run lint` pass.
+  `bun run test` 10/10 tasks pass. `git ls-remote tabla feat/context-engine`
+  returns `f9d5d0b`, which equals local `HEAD`.
+- Not done: no deploy. Neon, Vercel, the environment variables and the migration
+  are still open. `graft build` not run.
+
+What blocked the push, in the order it appeared:
+
+1. Null bytes. About 78 working-tree files read as only zeros. The type check
+   failed with `TS1127`. The files repaired themselves. The repository sits on a
+   backup drive, and a sync process emptied them for a short time. No file was
+   restored in bulk.
+2. A corrupt generated file. `apps/app/.next/dev/types/root-params.d.ts` held 101
+   null bytes. It is gitignored and untracked. I deleted it. `next typegen` does
+   not recreate it, and the type check passes without it.
+3. Line endings. Biome wanted CRLF on three files. I had reverted one of them to
+   LF myself. `bunx biome check --write` fixed all three.
+4. A test that assumed a UTC database. Raw SQL `NOW()` writes the session wall
+   clock, not a UTC instant. Every timestamp column is `TIMESTAMP(3)`, with no
+   time zone, and all 159 of them. On this IST database the value landed 5 hours
+   30 minutes in the future, so the guard in `settle` never matched. Fixed with
+   `(NOW() AT TIME ZONE 'UTC')`. See item 0 of `plan.md`.
+5. A shallow clone. `.git/shallow` grafted the history at `6d4793d`, a merge
+   commit whose parents were never downloaded. An empty remote needs a whole
+   chain, so GitHub refused the pack with
+   `did not receive expected object 77089e44`. `git fetch --unshallow origin`
+   brought the count from 5 commits to 229. That fetch only reads `origin`.
+   `git fsck` reported no corrupt object at any point.
+
+Two flaky tests passed on a later run, with no change to their code:
+
+- `Auth (e2e)` in `apps/api`. Its `beforeAll` boots the whole Nest application.
+  That exceeds the default timeout when 36 files run together. Alone it takes
+  1.4 seconds and passes.
+- `retireExhausted > retires no more rows than the limit allows` in `apps/agent`.
+  `retireExhausted` carries no kind filter, so it retires any eligible row in the
+  table. The spec's `clear()` removes only `kind = "test-lease"`. Rows left by an
+  interrupted run make the count wrong. Four runs on a clean database pass.
+
+The working tree still holds 1424 modified files. 1419 of them differ only by
+line ending. Another agent set `"lineEnding": "crlf"` in `biome.jsonc` between
+02:43 and 02:45 and reformatted the repository, and wrote no entry here. That
+work is uncommitted. The owner chose to leave it alone, and this session did not
+touch it.
+
+---
+
 ## 2026-10-06 02:35 IST — Claude — Rebrand, telemetry removal, Phase 8 hosting, workflow files
 - Changed: all rebrand files (logo, theme, landing, sign-in), telemetry module deleted, Phase 8 hosting infra, `AGENTS.md`, `SECURITY.md`, `CONTRIBUTING.md`, `README.md`, `CHANGELOG.md`, `.githooks/pre-commit`, `docs/hosting.md`, `infra/clock/`, `apps/api/src/agent/agent-tick.controller.ts`, `packages/ui` motion components, `packages/context` remaining files.
 - Why: Rename from trycompai/crm to Tabla; remove original telemetry; add Cloudflare Worker clock for free-tier hosting; add mandatory workflow hook.

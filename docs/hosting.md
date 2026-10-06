@@ -108,14 +108,22 @@ works. Two fallbacks, both free and with no card:
 
 | Variable | app | api | agent |
 | --- | --- | --- | --- |
-| `DATABASE_URL` (pooled) | — | yes | yes |
+| `DATABASE_URL` (pooled) | yes | yes | yes |
 | `DIRECT_DATABASE_URL` | — | yes | — |
-| `BETTER_AUTH_SECRET`, `ALLOWED_SIGN_IN` | — | yes | — |
+| `BETTER_AUTH_SECRET` | yes, the same value | yes | — |
+| `ALLOWED_SIGN_IN` | — | yes | — |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | — | yes | — |
 | `API_URL`, `APP_URL`, `AGENT_URL` | yes | yes | — |
 | `AGENT_BRIDGE_SECRET` | yes | yes | yes |
 | `CRON_SECRET` | — | yes | — |
 | `API_REGION` | — | yes, at build | — |
+
+The app reads the database and verifies the session itself. `apps/app/lib/session.ts`
+imports the Prisma client, and `apps/app/turbo.json` passes both variables to the
+build. So the app needs `DATABASE_URL` at build time and at run time, and
+`BETTER_AUTH_SECRET` must hold the same value as the api. A different value makes
+the app reject the api's cookie, and the browser bounces between `/sign-in` and
+`/`.
 
 Do not set `AUTH_COOKIE_DOMAIN`. `vercel.app` is a public suffix, and the app
 proxies the API, so the cookie is same-origin already. Do not set
