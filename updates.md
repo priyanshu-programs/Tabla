@@ -24,6 +24,30 @@ The log of every change to this repository. `AGENTS.md` makes it mandatory.
 
 ---
 
+## 2026-10-06 16:45 IST — Claude — Sign-in works on the deployed app
+- Changed: `plan.md`, `updates.md`. No code.
+- Result: the owner signs in on `https://tabla-app-seven.vercel.app`. This is the
+  first successful sign-in in production. Phase 8 is no longer blocked.
+- The three faults, in the order they appeared:
+  1. The app build dropped `API_URL`, so the proxy called `localhost:3001` and
+     every auth call returned 502. Fixed in `apps/app/turbo.json`.
+  2. Better Auth built the OAuth redirect URI from `API_URL`, so the callback
+     landed on the api host and the session cookie never reached the app. Fixed
+     by `env.authBaseUrl`, commit `b1cb833`.
+  3. The Google token exchange failed with `invalid_code`. The copy of
+     `GOOGLE_CLIENT_SECRET` on `tabla-api` did not match the one Google accepts.
+     The owner re-set it and redeployed.
+- How fault 3 was found without logs: a token request to
+  `https://oauth2.googleapis.com/token` with the credentials from the root `.env`
+  and a deliberately invalid code returned `invalid_grant`, "Malformed auth
+  code". A wrong credential returns `invalid_client`. So the local value was
+  valid and the deployed value was not. Use this probe again. It needs no
+  dashboard access.
+- Unknown: whether the re-paste alone fixed it, or the trim in `de41afb`
+  deployed at the same time. Both landed together.
+- Not done: nobody checked that the session survives a reload, or that the
+  workspace loads its data. The Slack redirect URL still names the api origin.
+
 ## 2026-10-06 16:20 IST — Claude — Every environment value is trimmed before it is read
 - Changed: `packages/auth/src/env.ts`, `apps/api/src/config/env.validation.ts`,
   `packages/auth/test/sso.spec.ts`.

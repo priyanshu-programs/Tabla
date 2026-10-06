@@ -43,7 +43,7 @@ goal:
 | 5a | Larger landing page: motion, stats, ticker, "how it works" | Committed in `be68f5e`. Not deployed. |
 | 6 | Push to the `tabla` remote | Done. `f9d5d0b` on `feat/context-engine` |
 | 7 | Tabla's own interface, built new | Logged. Not planned |
-| 8 | Hosting on free tiers: Vercel Hobby, Neon, Cloudflare clock | `tabla-app` and `tabla-api` are live. The redirect loop is fixed. Sign-in now fails at the Google token exchange with `invalid_code`. The agent and the clock are not deployed. |
+| 8 | Hosting on free tiers: Vercel Hobby, Neon, Cloudflare clock | `tabla-app` and `tabla-api` are live and sign-in works. The agent and the clock are not deployed. |
 | W | Mandatory workflow: `plan.md`, `updates.md`, graft, security rules | Done. Committed in `be68f5e` |
 | S | Full security audit | Not started. Procedure is in `SECURITY.md` |
 
@@ -178,12 +178,11 @@ The whole plan, the limits and the setup steps are in `docs/hosting.md`.
    `http://localhost:3000/api/auth/callback/google` in Google Cloud, set
    `APP_URL` on `tabla-api` with the browser host first, redeploy both projects,
    then sign in. Google accepts the new URI now, and the callback reaches Tabla.
-4c. Sign-in fails at the next step with `?error=invalid_code`. Better Auth raises
-   it when the Google token exchange throws. Every environment value is trimmed
-   now, because a padded `GOOGLE_CLIENT_SECRET` on `tabla-api` is the leading
-   suspect. The cause is unconfirmed. Left, for the owner: read `tabla-api` →
-   Logs for the real error from Google, re-paste `GOOGLE_CLIENT_ID` and
-   `GOOGLE_CLIENT_SECRET` with no padding, and redeploy `tabla-api`.
+4c. The Google token exchange failed with `invalid_code`, because the copy of
+   `GOOGLE_CLIENT_SECRET` on `tabla-api` did not match the one Google accepts.
+   The owner re-set it and redeployed. Every environment value is trimmed now,
+   so a padded paste cannot repeat this. **Sign-in works on
+   `https://tabla-app-seven.vercel.app`.** Done on 2026-10-06.
 5. After they exist: set `API_URL` and `AGENT_URL` on all three, copy
    `ALLOWED_SIGN_IN`, `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` from the root
    `.env` to `tabla-api`, set `DIRECT_DATABASE_URL`, `CRON_SECRET` and
