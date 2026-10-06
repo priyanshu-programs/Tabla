@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { AuthHeading, AuthShell } from "@/components/auth-shell";
 import { getSession } from "@/lib/session";
 import { getServerQueryClient, getServerTrpc } from "@/lib/trpc/server";
+import { SignInError } from "./sign-in-error";
 import { SocialSignIn } from "./social-sign-in";
 import { type SsoProvider, SsoSignIn } from "./sso-sign-in";
 
@@ -60,11 +61,11 @@ export default function SignInPage({ searchParams }: PageProps<"/sign-in">) {
 async function SignIn({
 	searchParams,
 }: Pick<PageProps<"/sign-in">, "searchParams">) {
-	const [session, options, { method }] = await Promise.all([
-		currentSession(),
-		signInOptions(),
-		searchParams,
-	]);
+	const [
+		session,
+		options,
+		{ method, error, error_description: errorDescription },
+	] = await Promise.all([currentSession(), signInOptions(), searchParams]);
 
 	if (session) {
 		redirect("/");
@@ -109,6 +110,8 @@ async function SignIn({
 				title="Sign in to Tabla"
 				description="An approved first sign-in creates your Tabla account."
 			/>
+
+			<SignInError code={error} description={errorDescription} />
 
 			{showSso ? <SsoSignIn providers={providers} /> : null}
 			{social.map((provider) => (

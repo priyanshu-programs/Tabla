@@ -71,8 +71,14 @@ CLI loads `auth.ts` directly. See
 [`docs/environment.md`](../../docs/environment.md).
 
 Create an OAuth client in the Google Cloud console and add
-`<API_URL>/api/auth/callback/google` — `http://localhost:3001/api/auth/callback/google`
+`<APP_URL>/api/auth/callback/google` — `http://localhost:3000/api/auth/callback/google`
 in development — as an authorised redirect URI.
+
+`baseURL` is `env.authBaseUrl`, which is the first value of `APP_URL`. Every
+browser-level auth redirect — the OAuth callback, the Slack callback, the SSO
+callback — therefore lands on the app origin, and the app proxies it to the api.
+A callback that lands on the api origin sets the state cookie and the session
+cookie on a host the app cannot read, and the browser returns to `/sign-in`.
 
 `ALLOWED_SIGN_IN` decides who may sign in, and an empty value admits nobody. It
 is the whole authorisation model: there are no roles and no organizations, so

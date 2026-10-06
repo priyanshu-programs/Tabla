@@ -68,13 +68,18 @@ list fails closed.** Parsed on demand. `packages/auth/src/workspace.ts`.
   resolves its tsconfig paths from the current directory and then cannot build
   its dependency graph. There is no fix in the dev script today.
 - **`APP_URL`** (`:3000`) is also the trusted-origin and `callbackURL` allow-list.
-- **Every OAuth `redirect_uri` is built from `API_URL`, never `APP_URL`.** Better
-  Auth serves `/api/auth/*` at `baseURL`, and `baseURL` is `apiUrl`. A redirect
-  built from `APP_URL` points at the web app, where `/api/auth/callback` does not
-  exist, and the provider rejects it with "redirect_uri did not match". This is
-  invisible until someone sets `APP_URL` to a tunnel or a LAN host, at which
-  point the redirect silently becomes that host. `ssoCallbackBase()` is the
-  pattern; `slackRedirectUri` in `auth.ts` once was not.
+- **Every OAuth `redirect_uri` is built from `APP_URL`, never `API_URL`.** Better
+  Auth's `baseURL` is `env.authBaseUrl`, which is the **first** value of
+  `APP_URL`. The app owns `/api/auth/*` through the catch-all proxy at
+  `apps/app/app/api/[...path]/route.ts`, which forwards to the API and re-emits
+  every `Set-Cookie`. So the cookie lands on the origin the browser already uses.
+  A redirect built from `API_URL` sends the browser to the API host, where the
+  state cookie does not exist and the new session cookie is host-only. The
+  browser returns to `/sign-in` with no error. On `*.vercel.app` there is no
+  repair, because that is a public suffix. `ssoCallbackBase()` and
+  `slackRedirectUri` in `auth.ts` both follow `authBaseUrl`.
+  Set `APP_URL`'s first value to the host the browser uses. A tunnel or a LAN
+  host must be first, and its redirect URI must be registered with the provider.
 - **`AUTH_COOKIE_DOMAIN`** only for API and app on different subdomains of one parent.
 - **`AGENT_URL`** is the agent's deployment, server-side only, and **must include the
   scheme** — validated at boot, or it throws when a task is queued instead.

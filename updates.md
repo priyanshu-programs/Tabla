@@ -24,6 +24,106 @@ The log of every change to this repository. `AGENTS.md` makes it mandatory.
 
 ---
 
+## 2026-10-06 15:05 IST — Claude — The OAuth callback landed on the api host, so sign-in looped
+- Changed: `packages/auth/src/env.ts`, `packages/auth/src/auth.ts`,
+  `packages/auth/src/sso.ts`, `packages/auth/src/index.ts`,
+  `packages/auth/test/sso.spec.ts`,
+  `apps/app/app/(landing)/sign-in/page.tsx`,
+  `apps/app/app/(landing)/sign-in/sign-in-error.tsx` (new), `.env.example`,
+  `docs/hosting.md`, `docs/environment.md`, `apps/api/README.md`,
+  `packages/auth/README.md`.
+- Why: Sign-in on `https://tabla-app-seven.vercel.app` returned to `/sign-in`.
+  The entry below fixed the 502. Both `/api/auth/ok` endpoints return 200 now,
+  so the loop had a second cause.
+- Cause: `auth.ts` set `baseURL: env.apiUrl`. Better Auth builds every
+  browser-level redirect from `baseURL`. A live probe of
+  `POST /api/auth/sign-in/social` returned
+  `redirect_uri=https://tabla-api.vercel.app/api/auth/callback/google` and set
+  `__Secure-crm.state` on the app host. Google then sent the browser to the api
+  host, which never receives that state cookie, and whose own session cookie is
+  host-only to it. The browser reached the app with no `crm.session_token`, and
+  `apps/app/proxy.ts` sent it to `/sign-in`. `AUTH_COOKIE_DOMAIN` cannot repair
+  this, because `vercel.app` is a public suffix. Local development hid the
+  fault: cookies ignore the port, so `:3000` and `:3001` share one jar.
+- Fix 1: `env.authBaseUrl` holds the first value of `APP_URL`. `baseURL`,
+  `slackRedirectUri` and `ssoCallbackBase()` all read it. The app already owns
+  `/api/auth/*` through `apps/app/app/api/[...path]/route.ts`, which forwards to
+  the api and re-emits every `Set-Cookie`, so the cookie lands on the app origin.
+- Fix 2: `/sign-in` now shows the OAuth error. It read only `method` from
+  `searchParams` and dropped `error` and `error_description`, so a refusal by
+  `ALLOWED_SIGN_IN` looked exactly like the cookie fault.
+- Checked: `bun run check-types` 13/13, `bun run lint` 9/9, `bun run lint:slop`
+  exit 0, `bun run test` 159 pass 0 fail. `bunx biome check` clean on the changed
+  paths, except the pre-existing `noBarrelFile` warning on
+  `packages/auth/src/index.ts`.
+- Not done: the owner must add
+  `https://tabla-app-seven.vercel.app/api/auth/callback/google` and
+  `http://localhost:3000/api/auth/callback/google` in Google Cloud, set `APP_URL`
+  on `tabla-api` with the browser host first, and redeploy both projects. Nobody
+  signed in end to end yet. The Slack app redirect URL is not changed.
+
+## 2026-10-06 13:36 IST — Claude — The app build dropped API_URL, so sign-in failed
+- Changed: `apps/app/turbo.json`.
+- Why: Sign-in on `https://tabla-app-seven.vercel.app` returned 502. The app
+  proxied every auth call to `http://localhost:3001`.
+- Cause: the `build` task in `apps/app/turbo.json` declared `env` as
+  `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_AUTH_URL` only. A package task `env`
+  replaces the root list. It does not merge. The root `turbo.json` line 44
+  declares `API_URL` and `APP_URL`, and the package list dropped both. Turbo runs
+  in strict env mode, so `next build` never saw `API_URL`, and
+  `apps/app/next.config.ts` line 9 fell back to `http://localhost:3001`. The
+  fallback was inlined into the function bundle. The variable was set correctly on
+  the Vercel project the whole time.
+- Fix: the `build` task now declares `API_URL`, `APP_URL`, `NEXT_PUBLIC_API_URL`
+  and `NEXT_PUBLIC_AUTH_URL`.
+- Checked: `https://tabla-api.vercel.app/api/auth/ok` returns 200, so the api boots
+  and `ALLOWED_SIGN_IN` is set. `https://tabla-app-seven.vercel.app/api/auth/ok`
+  returns 502 with the body `The API at http://localhost:3001 is not reachable.`,
+  which is `apps/app/app/api/[...path]/route.ts` line 49 printing its own value.
+- Vercel: the owner also set `NEXT_PUBLIC_API_URL` on `tabla-app` as the immediate
+  unblock, because that name is declared in the old list and reaches the build
+  without this commit.
+- Not done: the redeploy of `tabla-app` is not verified. `tabla-agent` does not
+  exist, so `AGENT_URL` is unset on all projects. The clock is not deployed.
+
+## 2026-10-06 13:10 IST — Claude — tabla-app is live. The api root directory was wrong
+- Changed: `docs/hosting.md`, `plan.md`.
+- Why: The app had to reach production, and the setup table gave `tabla-api` a root
+  directory that cannot work.
+- Deployed: `https://tabla-app-seven.vercel.app` returns 200, from commit `34dab9a`,
+  in `sin1`. The install fix and `next build` both pass on Vercel.
+- Vercel settings on `tabla-app`: root directory `apps/app`, function region `sin1`,
+  preview deployments off.
+- Variables on `tabla-app`: `DATABASE_URL` pooled, `BETTER_AUTH_SECRET`,
+  `AGENT_BRIDGE_SECRET`, `APP_URL` with both production domains.
+- Database: the Neon project `steep-snow-81337543`, branch `br-odd-lake-b36n90em`,
+  database `neondb`, at 56 of 56 migrations with none unfinished. No `db:deploy`
+  was needed.
+- Doc fix: `tabla-api` takes the repository root, not `apps/api`.
+  `apps/api/scripts/build-func.mjs` line 17 writes `.vercel/output` at the
+  repository root. Vercel reads that path under the project root directory, so a
+  root of `apps/api` finds no output.
+- Not done: `tabla-api` and `tabla-agent` do not exist. The Vercel connector returns
+  403 on `create_git_project` and on `create_project`, so the owner creates them.
+  Nobody can sign in until the api runs. The clock is not deployed.
+
+## 2026-10-06 12:30 IST — Claude — Commit and push of the prisma config fix
+- Changed: `plan.md`. Corrects the entry below, which says "No commit".
+- Commit `34dab9a`. Pushed to `tabla` on `feat/context-engine`. All four pre-push
+  tasks pass: `check-types`, `lint`, `lint:slop`, `test` 10/10.
+- The first attempt used `...(url ? { datasource: { url } } : {})`. `lint:slop`
+  refused it: `anti-slop(no-conditional-empty-object-spread)`. The config now
+  assigns `const datasource = url ? { url } : undefined` and passes the property
+  directly. Prisma accepts the explicit `undefined`: `generate` exits 0 and
+  `migrate status` prints the datasource error.
+- Line endings: the commit holds LF, because the committed `biome.jsonc` sets no
+  `lineEnding`, and CI lints the committed tree. The working-tree copy holds CRLF
+  and stays unstaged, because the uncommitted `biome.jsonc` sets `crlf` and the
+  pre-push hook lints the working tree. Both checks pass. The CRLF reformat of
+  1419 files is still uncommitted, and this session did not touch it.
+- Not done: the owner sets the variables on `tabla-app`. The next build fails at
+  `next build` without them.
+
 ## 2026-10-06 12:05 IST — Claude — Prisma config no longer needs DATABASE_URL to generate
 - Changed: `packages/db/prisma.config.ts`, `docs/hosting.md`, `plan.md`.
 - Why: The first `tabla-app` build on Vercel failed in `bun install`. The

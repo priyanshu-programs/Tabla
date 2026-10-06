@@ -83,9 +83,14 @@ works. Two fallbacks, both free and with no card:
 
    | Project | Root directory | Build command |
    | --- | --- | --- |
-   | `tabla-api` | `apps/api` | `node scripts/build-func.mjs` |
+   | `tabla-api` | the repository root | `node apps/api/scripts/build-func.mjs` |
    | `tabla-app` | `apps/app` | default |
    | `tabla-agent` | `apps/agent` | `eve build` |
+
+   `tabla-api` takes the repository root, not `apps/api`.
+   `apps/api/scripts/build-func.mjs` writes `.vercel/output` at the repository
+   root. Vercel reads that directory under the root directory of the project, so
+   a root of `apps/api` finds no output and the deploy fails.
 
 3. **Regions.** Set `API_REGION` on `tabla-api` to the region of the database.
    Set the function region of the other two projects in their settings.
@@ -95,7 +100,8 @@ works. Two fallbacks, both free and with no card:
    because a changed variable needs a new build.
 6. **Google Cloud.** Enable the Gmail API and the Calendar API. Make the
    consent screen External and publish it to "In production". Add the redirect
-   URI `<API_URL>/api/auth/callback/google`.
+   URI `<APP_URL>/api/auth/callback/google`. It is the **app** origin, not the
+   api origin. See the note below the variable table.
 7. **Cloudflare.** Put the API URL in `infra/clock/wrangler.toml`. Then:
 
    ```sh
@@ -125,9 +131,27 @@ build. So the app needs `DATABASE_URL` at build time and at run time, and
 the app reject the api's cookie, and the browser bounces between `/sign-in` and
 `/`.
 
-Do not set `AUTH_COOKIE_DOMAIN`. `vercel.app` is a public suffix, and the app
-proxies the API, so the cookie is same-origin already. Do not set
-`AI_GATEWAY_API_KEY` on Vercel: OIDC covers the gateway.
+The auth base URL is the app origin. `packages/auth/src/env.ts` sets
+`authBaseUrl` to the **first** value of `APP_URL`, and `packages/auth/src/auth.ts`
+passes it to Better Auth as `baseURL`. Better Auth builds every browser-level
+redirect from it: the Google callback, the Slack callback and the SSO callback.
+Two rules follow.
+
+1. The first value of `APP_URL` is the host the browser uses. A list such as
+   `https://tabla-app-seven.vercel.app,https://tabla-app.vercel.app` puts the
+   callback on the first one. Set `APP_URL` on the api as well as on the app.
+2. The redirect URI you register with Google, with Slack and with your identity
+   provider holds that same origin.
+
+A callback that lands on the api origin cannot work. The state cookie sits on the
+app origin, and a session cookie set by the api origin is host-only to it. The
+browser then reaches the app with no `crm.session_token`, and `apps/app/proxy.ts`
+sends it to `/sign-in`. Sign-in looks silent and nothing is logged.
+
+Do not set `AUTH_COOKIE_DOMAIN`. `vercel.app` is a public suffix, so two
+`*.vercel.app` hosts never share a cookie, and the app proxies the API, so the
+cookie is same-origin already. Do not set `AI_GATEWAY_API_KEY` on Vercel: OIDC
+covers the gateway.
 
 ## Checks after a deploy
 

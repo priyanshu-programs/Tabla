@@ -56,9 +56,12 @@ const appUrls = (optional("APP_URL") ?? DEFAULT_APP_URL)
 
 const appUrl = appUrls[0] ?? DEFAULT_APP_URL;
 
+const authBaseUrl = appUrl;
+
 export const env = {
 	apiUrl,
 	appUrl,
+	authBaseUrl,
 	google: googleCredentials(),
 	microsoft: microsoftCredentials(),
 	slack: slackCredentials(),
@@ -79,4 +82,4 @@ export function isSlackConfigured(): boolean {
 	return env.slack !== undefined;
 }
 
-export { apiUrl, appUrl };
+export { apiUrl, appUrl, authBaseUrl };

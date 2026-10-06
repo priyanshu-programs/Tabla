@@ -20,7 +20,9 @@ value almost every install wants — they are both the sign-in button and the
 Gmail and Calendar sync — but they are optional and set as a pair, because an
 install that signs in through its own identity provider on **Settings → SSO**
 needs neither. With them, register
-`http://localhost:3001/api/auth/callback/google` as an authorised redirect URI.
+`http://localhost:3000/api/auth/callback/google` as an authorised redirect URI.
+The redirect URI holds the **app** origin, not this one: the app proxies
+`/api/auth/*` to this process, and the session cookie must land on the app.
 `src/config/env.validation.ts` is the full list of what this process reads;
 [`docs/environment.md`](../../docs/environment.md) explains where the file is
 found.

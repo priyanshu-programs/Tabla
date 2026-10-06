@@ -43,7 +43,7 @@ goal:
 | 5a | Larger landing page: motion, stats, ticker, "how it works" | Committed in `be68f5e`. Not deployed. |
 | 6 | Push to the `tabla` remote | Done. `f9d5d0b` on `feat/context-engine` |
 | 7 | Tabla's own interface, built new | Logged. Not planned |
-| 8 | Hosting on free tiers: Vercel Hobby, Neon, Cloudflare clock | Code committed in `be68f5e`. The first `tabla-app` build failed. The install fix is done, not committed. Not deployed. |
+| 8 | Hosting on free tiers: Vercel Hobby, Neon, Cloudflare clock | `tabla-app` and `tabla-api` are live. The auth base URL is the app origin now. Sign-in needs the new Google redirect URI and one redeploy. The agent and the clock are not deployed. |
 | W | Mandatory workflow: `plan.md`, `updates.md`, graft, security rules | Done. Committed in `be68f5e` |
 | S | Full security audit | Not started. Procedure is in `SECURITY.md` |
 
@@ -151,12 +151,39 @@ The whole plan, the limits and the setup steps are in `docs/hosting.md`.
    `prisma.config.ts` now sets the datasource only when the variable exists.
    `docs/hosting.md` now says the app needs `DATABASE_URL` and the api's
    `BETTER_AUTH_SECRET`, because `apps/app/lib/session.ts` reads the database.
-   Done on 2026-10-06. Not committed.
-3. Deploy, after item 7. Create `tabla-api`, `tabla-app` and `tabla-agent` on
-   Vercel. Set the variables. Deploy the clock to Cloudflare. Today only
-   `tabla-app` exists, and it holds no variable at all.
-4. Pick a free model on the Tabla settings page.
-5. After one week, read the Neon, Vercel and Workflow usage pages.
+   Done on 2026-10-06. Commit `34dab9a`, pushed to `tabla`.
+3. `tabla-app` is live at `https://tabla-app-seven.vercel.app`, from commit
+   `34dab9a`, in `sin1`. Its root directory is `apps/app`, previews are off, and
+   it holds `DATABASE_URL`, `BETTER_AUTH_SECRET`, `AGENT_BRIDGE_SECRET` and
+   `APP_URL`. The database is the Neon project `steep-snow-81337543`, at 56 of 56
+   migrations.
+4. `tabla-api` is live at `https://tabla-api.vercel.app`. `/api/auth/ok` returns
+   200, so Nest boots and `ALLOWED_SIGN_IN` is set. `tabla-agent` does not exist.
+   The owner creates it. The Vercel connector returns 403 on every
+   project-creation path, and now on every read of this scope. `tabla-api` takes
+   the repository root, not `apps/api`. See `docs/hosting.md`.
+4a. The `build` task in `apps/app/turbo.json` declared `env` without `API_URL`.
+   A package task `env` replaces the root list, so `next build` never saw the
+   variable and `next.config.ts` inlined `http://localhost:3001`. Sign-in returned
+   502 on the live app. The task now declares `API_URL` and `APP_URL`. Done on
+   2026-10-06. Not committed. Left: redeploy `tabla-app` and confirm
+   `/api/auth/ok` returns 200 through the proxy.
+4b. The OAuth callback landed on the api host, so the session cookie never
+   reached the app and sign-in returned to `/sign-in`. `packages/auth` now builds
+   `baseURL`, the Slack redirect and the SSO callback from `env.authBaseUrl`,
+   which is the first value of `APP_URL`. `/sign-in` also shows the OAuth error
+   now. Done on 2026-10-06. Not committed. Left, for the owner: add
+   `https://tabla-app-seven.vercel.app/api/auth/callback/google` and
+   `http://localhost:3000/api/auth/callback/google` in Google Cloud, set
+   `APP_URL` on `tabla-api` with the browser host first, redeploy both projects,
+   then sign in.
+5. After they exist: set `API_URL` and `AGENT_URL` on all three, copy
+   `ALLOWED_SIGN_IN`, `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` from the root
+   `.env` to `tabla-api`, set `DIRECT_DATABASE_URL`, `CRON_SECRET` and
+   `API_REGION`, then add the Google redirect URI.
+6. Deploy the clock to Cloudflare.
+7. Pick a free model on the Tabla settings page.
+8. After one week, read the Neon, Vercel and Workflow usage pages.
 
 ## Decisions that wait for the owner
 

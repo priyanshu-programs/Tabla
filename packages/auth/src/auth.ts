@@ -33,7 +33,7 @@ const socialProviders: NonNullable<BetterAuthOptions["socialProviders"]> = {};
 const slackOAuth = env.slack;
 const slackRedirectUri = new URL(
 	"/api/auth/oauth2/callback/slack",
-	env.apiUrl,
+	env.authBaseUrl,
 ).toString();
 
 if (env.google) {
@@ -71,7 +71,7 @@ if (env.microsoft) {
 
 export const auth = betterAuth({
 	appName: "Tabla",
-	baseURL: env.apiUrl,
+	baseURL: env.authBaseUrl,
 
 	database: prismaAdapter(db, {
 		provider: "postgresql",
