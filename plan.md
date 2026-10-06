@@ -172,7 +172,8 @@ The whole plan, the limits and the setup steps are in `docs/hosting.md`.
    reached the app and sign-in returned to `/sign-in`. `packages/auth` now builds
    `baseURL`, the Slack redirect and the SSO callback from `env.authBaseUrl`,
    which is the first value of `APP_URL`. `/sign-in` also shows the OAuth error
-   now. Done on 2026-10-06. Not committed. Left, for the owner: add
+   now. Done on 2026-10-06. Commit `b1cb833`, pushed to `tabla`. Left, for the
+   owner: add
    `https://tabla-app-seven.vercel.app/api/auth/callback/google` and
    `http://localhost:3000/api/auth/callback/google` in Google Cloud, set
    `APP_URL` on `tabla-api` with the browser host first, redeploy both projects,

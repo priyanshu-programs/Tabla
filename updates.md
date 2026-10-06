@@ -24,6 +24,18 @@ The log of every change to this repository. `AGENTS.md` makes it mandatory.
 
 ---
 
+## 2026-10-06 15:30 IST — Claude — Commit and push of the auth base URL fix
+- Changed: `plan.md`. Corrects the entry below, which says "Not committed".
+- Commit `b1cb833`. Pushed to `tabla` on `feat/context-engine`. All four pre-push
+  tasks pass: `check-types` 13/13, `lint` 9/9, `lint:slop` exit 0, `test` 159/159.
+- Line endings: staged with `git -c core.autocrlf=input add`, so the commit holds
+  LF and the CRLF working tree stays unstaged. The `--stat` on the index reported
+  whole-file churn, but the commit against its parent is 275 insertions and 34
+  deletions, which is the real change. The CRLF reformat of 1419 files is still
+  uncommitted, and this session did not touch it.
+- Not done: Vercel builds this push. Sign-in returns `redirect_uri_mismatch`
+  until the owner adds the app-origin redirect URI in Google Cloud.
+
 ## 2026-10-06 15:05 IST — Claude — The OAuth callback landed on the api host, so sign-in looped
 - Changed: `packages/auth/src/env.ts`, `packages/auth/src/auth.ts`,
   `packages/auth/src/sso.ts`, `packages/auth/src/index.ts`,
